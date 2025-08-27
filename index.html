@@ -3,178 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MD Converter Korean - 한글 깨짐 없는 마크다운 변환기</title>
+    <title>MD Converter Korean - Dillinger Style</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        
+        /* Top Navigation Bar */
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            height: 50px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
+        
+        .navbar-brand {
+            font-size: 18px;
+            font-weight: bold;
+            margin-right: auto;
         }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .upload-area:hover {
-            background: #f8f9ff;
-        }
-        .upload-area.dragover {
-            background: #e8ebff;
-            border-color: #764ba2;
-        }
-        .buttons {
+        
+        .navbar-buttons {
             display: flex;
             gap: 10px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
         }
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            background: #667eea;
+        
+        .nav-btn {
+            background: transparent;
             color: white;
-            font-size: 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 12px;
+            border-radius: 3px;
             cursor: pointer;
+            font-size: 14px;
             transition: all 0.3s;
         }
-        button:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
         }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        
+        .nav-btn.primary {
+            background: #3498db;
+            border-color: #3498db;
         }
-        #preview {
-            margin-top: 30px;
+        
+        .nav-btn.primary:hover {
+            background: #2980b9;
+        }
+        
+        /* Main Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 50px - 40px);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: #34495e;
+            color: white;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            max-height: 400px;
             overflow-y: auto;
-            display: none;
         }
-        .loading {
-            display: none;
-            text-align: center;
+        
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-item {
+            padding: 8px 10px;
+            margin: 2px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-item.active {
+            background: #3498db;
+        }
+        
+        /* Editor and Preview Container */
+        .content-area {
+            flex: 1;
+            display: flex;
+            background: white;
+        }
+        
+        /* Editor Panel */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+        }
+        
+        .panel-header {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-textarea {
+            flex: 1;
+            width: 100%;
+            padding: 20px;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            background: white;
+        }
+        
+        /* Preview Panel */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        /* Bottom Bar */
+        .bottom-bar {
+            height: 40px;
+            background: #2c3e50;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 13px;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-right: auto;
+        }
+        
+        .export-btn {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #3498db;
+        }
+        
+        .status-info {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Preview Styles */
+        .preview-content h1 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-content h2 {
             margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .preview-content pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .preview-content code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .preview-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        .preview-content th,
+        .preview-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .preview-content th {
+            background: #f4f4f4;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .content-area {
+                flex-direction: column;
+            }
+            .editor-panel {
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 MD Converter Korean</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 30px;">
-            한글 깨짐 걱정 없는 마크다운 변환기
-        </p>
-        
-        <div class="upload-area" id="uploadArea">
-            <p style="font-size: 48px; margin-bottom: 20px;">📄</p>
-            <p>마크다운 파일을 드래그하거나 클릭하여 선택하세요</p>
-            <input type="file" id="fileInput" accept=".md,.markdown" style="display: none;">
-        </div>
-        
-        <div id="preview"></div>
-        
-        <div class="buttons" id="convertButtons" style="display: none;">
-            <button onclick="convertTo('html')">HTML로 변환</button>
-            <button onclick="convertTo('styled-html')">Styled HTML로 변환</button>
-            <button onclick="convertTo('pdf')">PDF로 변환</button>
-            <button onclick="convertTo('docx')">Word로 변환</button>
-            <button onclick="convertTo('excel')">Excel로 변환 (테이블)</button>
-            <button onclick="convertTo('txt')">텍스트로 변환</button>
-        </div>
-        
-        <div class="loading" id="loading">
-            <p>변환 중... ⏳</p>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="navbar-brand">📝 MD Converter Korean</div>
+        <div class="navbar-buttons">
+            <button class="nav-btn" onclick="newDocument()">NEW</button>
+            <button class="nav-btn" onclick="importFile()">IMPORT</button>
+            <button class="nav-btn primary" onclick="saveDocument()">SAVE AS</button>
+            <button class="nav-btn">⚙️</button>
         </div>
     </div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">📁 최근 파일</div>
+                <div class="sidebar-item active">새 문서.md</div>
+                <div class="sidebar-item">README.md</div>
+                <div class="sidebar-item">notes.md</div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">📝 템플릿</div>
+                <div class="sidebar-item" onclick="loadTemplate('readme')">README</div>
+                <div class="sidebar-item" onclick="loadTemplate('blog')">Blog Post</div>
+                <div class="sidebar-item" onclick="loadTemplate('report')">Report</div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">⬆️ Import</div>
+                <div class="sidebar-item" onclick="importLocal()">Local File</div>
+                <div class="sidebar-item" onclick="importUrl()">From URL</div>
+                <div class="sidebar-item" onclick="importGithub()">GitHub</div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span>MARKDOWN</span>
+                    <span id="wordCount">Words: 0 | Chars: 0</span>
+                </div>
+                <textarea class="editor-textarea" id="editor" placeholder="# 마크다운을 입력하세요...
 
+여기에 마크다운을 작성하거나 붙여넣으세요.
+실시간으로 미리보기가 업데이트됩니다.
+
+## 지원 기능
+- 한글 완벽 지원
+- 실시간 미리보기
+- 다양한 형식으로 내보내기"></textarea>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span>PREVIEW</span>
+                    <span>
+                        <button onclick="togglePreviewMode()">👁️</button>
+                    </span>
+                </div>
+                <div class="preview-content" id="preview">
+                    <h1>마크다운을 입력하세요...</h1>
+                    <p>여기에 마크다운을 작성하거나 붙여넣으세요.<br>
+                    실시간으로 미리보기가 업데이트됩니다.</p>
+                    <h2>지원 기능</h2>
+                    <ul>
+                        <li>한글 완벽 지원</li>
+                        <li>실시간 미리보기</li>
+                        <li>다양한 형식으로 내보내기</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+        <div class="export-buttons">
+            <button class="export-btn" onclick="exportAs('html')">HTML</button>
+            <button class="export-btn" onclick="exportAs('styled-html')">Styled HTML</button>
+            <button class="export-btn" onclick="exportAs('pdf')">PDF</button>
+            <button class="export-btn" onclick="exportAs('docx')">DOCX</button>
+            <button class="export-btn" onclick="exportAs('excel')">Excel</button>
+            <button class="export-btn" onclick="exportAs('txt')">TXT</button>
+        </div>
+        <div class="status-info">
+            <span>UTF-8 ✓</span>
+            <span>한글 감지 ✓</span>
+            <span>자동 저장: ON</span>
+        </div>
+    </div>
+    
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" accept=".md,.markdown,.txt,.csv" style="display: none;">
+    
     <script>
-        // 파일 업로드 처리
-        let currentMarkdown = '';
-        let currentFileName = '';
-        
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
+        const editor = document.getElementById('editor');
         const preview = document.getElementById('preview');
-        const convertButtons = document.getElementById('convertButtons');
+        const wordCount = document.getElementById('wordCount');
+        const fileInput = document.getElementById('fileInput');
         
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
+        // Update preview on editor change
+        editor.addEventListener('input', () => {
+            updatePreview();
+            updateWordCount();
+            // Auto-save to localStorage
+            localStorage.setItem('markdown-content', editor.value);
         });
         
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+        // Load saved content
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('markdown-content');
+            if (saved) {
+                editor.value = saved;
+                updatePreview();
+                updateWordCount();
+            }
         });
         
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            handleFile(e.dataTransfer.files[0]);
-        });
+        function updatePreview() {
+            // Simple markdown to HTML conversion (will be replaced with proper library)
+            let html = editor.value;
+            
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            
+            // Bold and italic
+            html = html.replace(/\*\*\*(.*)\*\*\*/gim, '<b><i>$1</i></b>');
+            html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
+            html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
+            
+            // Lists
+            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Line breaks
+            html = html.replace(/\n/gim, '<br>');
+            
+            preview.innerHTML = html;
+        }
+        
+        function updateWordCount() {
+            const text = editor.value;
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            const chars = text.length;
+            wordCount.textContent = `Words: ${words} | Chars: ${chars}`;
+        }
+        
+        function newDocument() {
+            if (confirm('현재 문서를 지우고 새 문서를 작성하시겠습니까?')) {
+                editor.value = '';
+                updatePreview();
+                updateWordCount();
+            }
+        }
+        
+        function importFile() {
+            fileInput.click();
+        }
         
         fileInput.addEventListener('change', (e) => {
-            handleFile(e.target.files[0]);
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    editor.value = e.target.result;
+                    updatePreview();
+                    updateWordCount();
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
         });
         
-        function handleFile(file) {
-            if (!file || !file.name.match(/\.(md|markdown)$/i)) {
-                alert('마크다운 파일만 업로드 가능합니다.');
-                return;
-            }
-            
-            currentFileName = file.name.replace(/\.(md|markdown)$/i, '');
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                currentMarkdown = e.target.result;
-                showPreview();
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-        
-        function showPreview() {
-            preview.innerHTML = '<h3>미리보기:</h3><pre>' + currentMarkdown.substring(0, 500) + 
-                               (currentMarkdown.length > 500 ? '...' : '') + '</pre>';
-            preview.style.display = 'block';
-            convertButtons.style.display = 'flex';
-        }
-        
-        function convertTo(format) {
-            console.log(`Converting to ${format}...`);
+        function exportAs(format) {
+            console.log(`Exporting as ${format}...`);
             alert(`${format} 변환 기능 구현 예정`);
-            // TODO: 실제 변환 로직 구현
+        }
+        
+        function loadTemplate(type) {
+            const templates = {
+                readme: `# Project Title
+
+## Description
+프로젝트에 대한 간단한 설명
+
+## Installation
+\`\`\`bash
+npm install
+\`\`\`
+
+## Usage
+사용 방법 설명
+
+## License
+MIT`,
+                blog: `# Blog Post Title
+
+*Date: ${new Date().toLocaleDateString('ko-KR')}*
+
+## Introduction
+블로그 포스트 소개
+
+## Main Content
+본문 내용
+
+## Conclusion
+결론`,
+                report: `# 보고서 제목
+
+## 요약
+보고서 요약
+
+## 본문
+상세 내용
+
+## 결론
+최종 결론`
+            };
+            
+            if (templates[type]) {
+                editor.value = templates[type];
+                updatePreview();
+                updateWordCount();
+            }
+        }
+        
+        // Placeholder functions
+        function saveDocument() {
+            const blob = new Blob([editor.value], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document.md';
+            a.click();
+        }
+        
+        function importLocal() {
+            importFile();
+        }
+        
+        function importUrl() {
+            const url = prompt('URL을 입력하세요:');
+            if (url) {
+                alert('URL import 기능 구현 예정');
+            }
+        }
+        
+        function importGithub() {
+            alert('GitHub import 기능 구현 예정');
+        }
+        
+        function togglePreviewMode() {
+            alert('Preview 모드 전환 기능 구현 예정');
         }
     </script>
 </body>
