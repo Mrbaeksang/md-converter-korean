@@ -1,17 +1,31 @@
 import { useState, useEffect } from 'react';
 import { markdownToHtml, exportAs } from './utils/converter';
 import type { ExportFormat } from './utils/converter';
+import LoadingSpinner from './components/LoadingSpinner';
+import kakaoQR from './assets/kakao-qr.png';
+import buymeacoffeeQR from './assets/buymeacoffee-qr.png';
 import './App.css';
 
 function App() {
   const [markdown, setMarkdown] = useState('');
   const [wordCount, setWordCount] = useState({ words: 0, chars: 0 });
   const [recentFiles, setRecentFiles] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [mobileView, setMobileView] = useState<'editor' | 'preview'>('preview');
+  const [mobileSidebarVisible, setMobileSidebarVisible] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // localStorage에서 저장된 내용 불러오기
     const saved = localStorage.getItem('markdown-content');
-    if (saved) {
+    const hasVisited = localStorage.getItem('has-visited');
+    
+    if (!hasVisited) {
+      // 첫 방문시 설명서 표시
+      showGuide();
+      localStorage.setItem('has-visited', 'true');
+    } else if (saved) {
       setMarkdown(saved);
     }
     
@@ -20,6 +34,16 @@ function App() {
     if (recent) {
       setRecentFiles(JSON.parse(recent));
     }
+    
+    // Mobile detection
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -49,8 +73,13 @@ function App() {
     }
   };
 
-  const handleExport = (format: string) => {
-    exportAs(format as ExportFormat, markdown);
+  const handleExport = async (format: string) => {
+    setIsExporting(true);
+    try {
+      await exportAs(format as ExportFormat, markdown);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleNewDocument = () => {
@@ -59,127 +88,267 @@ function App() {
     }
   };
 
-  const handleSaveDocument = () => {
-    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'document.md';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const showGuide = () => {
+    const guideContent = `# 📝 MD 변환기 by Mrbaeksang(devcom.kr)
 
-  const loadTemplate = (type: string) => {
-    const templates: Record<string, string> = {
-      readme: `# Project Title
+## 🎯 소개
+ChatGPT와 같은 생성형 AI가 만들어주는 파일들이 한국어를 지원하지 않아 어려움을 겪는 분들을 위해 만든 **공익적 목적의 마크다운 변환 사이트**입니다.
 
-## Description
-프로젝트에 대한 간단한 설명
+AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 형식으로 내보낼 수 있도록 설계되었습니다.
 
-## Installation
-\`\`\`bash
-npm install
-\`\`\`
+---
 
-## Usage
-사용 방법 설명
+## 📥 내보내기 형식 안내
 
-## License
-MIT`,
-      blog: `# Blog Post Title
+| 형식 | 아이콘 | 용도 | 특징 | 파일명 |
+|:---:|:---:|---|---|---|
+| **HTML** | 📄 | 웹페이지 붙여넣기 | 순수 HTML 태그 | document.html |
+| **Styled HTML** | 🎨 | 완성된 웹문서 | CSS 스타일 포함 | document_styled.html |
+| **PDF** | 📑 | 인쇄/공유용 | A4, 한글폰트 지원<br>⏳ 생성시간 소요 | document.pdf |
+| **DOCX** | 📝 | MS Word 편집 | Word로 편집 가능<br>표/목록 자동 변환 | document.docx |
+| **엑셀** | 📊 | 표 데이터 추출 | 표만 추출<br>각 표는 별도 시트 | document.xlsx |
+| **TXT** | 📋 | 순수 텍스트 | 서식 없는 일반 텍스트 | document.txt |
 
-*Date: ${new Date().toLocaleDateString('ko-KR')}*
+---
 
-## Introduction
-블로그 포스트 소개
+## 💡 사용 팁
 
-## Main Content
-본문 내용
+---
 
-## Conclusion
-결론`,
-      report: `# 보고서 제목
+## 🚀 빠른 시작
+1. **새 문서** 버튼으로 시작하거나
+2. **파일 가져오기**로 기존 마크다운 파일 불러오기
+3. 왼쪽에서 편집, 오른쪽에서 미리보기 확인
+4. 원하는 형식으로 **내보내기**
 
-## 요약
-보고서 요약
+---
 
-## 본문
-상세 내용
+## 🔒 보안 & 프라이버시
+> **100% 클라이언트 사이드 처리**
+> 
+> ✅ 모든 변환은 브라우저에서만 처리  
+> ✅ 서버로 데이터 전송 없음  
+> ✅ 완전한 개인정보 보호  
+> ✅ 인터넷 없어도 작동 (첫 로드 후)
 
-## 결론
-최종 결론`
-    };
+---
+
+## 🔗 링크
+<div style="display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap;">
+  <a href="https://devcom.kr" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
+    🌐 개발자 사이트
+  </a>
+  <a href="mailto:qortkdgus95@gmail.com" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
+    ✉️ 문의/버그 제보
+  </a>
+  <a href="https://www.instagram.com/baek.__.sang/" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
+    📷 인스타그램
+  </a>
+</div>
+
+## ☕ 개발자에게 커피 후원하기
+이 도구가 도움이 되셨다면 개발자는 행복합니다 😊
+개발자에게 커피 한 잔은 큰 힘이 됩니다!
+
+<div style="display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; align-items: center;">
+  <!-- 모바일: 카카오페이 링크 버튼 -->
+  <a href="https://qr.kakaopay.com/2810060110000071236650569c404083" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FEE500 0%, #FFEB00 100%); border-radius: 8px; text-decoration: none; color: #3C1E1E; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    💛 카카오페이로 커피사주기
+  </a>
+  
+  <!-- PC: 카카오페이 QR -->
+  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <img src="${kakaoQR}" alt="카카오페이 QR" style="width: 160px; height: 160px; border-radius: 8px;" />
+    <span style="font-size: 14px; color: #3C1E1E; font-weight: 600;">💛 카카오페이 QR</span>
+    <span style="font-size: 12px; color: #6b7280;">스캔하여 후원하기</span>
+  </div>
+
+  <!-- 모바일: Buy Me a Coffee 링크 버튼 -->
+  <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FFDD00 0%, #FBB034 100%); border-radius: 8px; text-decoration: none; color: #141414; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    ☕ Buy Me a Coffee
+  </a>
+  
+  <!-- PC: Buy Me a Coffee QR + 링크 -->
+  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+    <div style="padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+        <img src="${buymeacoffeeQR}" alt="Buy Me a Coffee QR" style="width: 160px; height: 160px; border-radius: 8px; cursor: pointer;" />
+      </a>
+      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="font-size: 14px; color: #141414; font-weight: 600; text-decoration: none;">☕ Buy Me a Coffee</a>
+      <span style="font-size: 12px; color: #6b7280;">스캔 또는 클릭</span>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+  .mobile-only { display: inline-flex !important; }
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: flex !important; }
+}
+</style>
+
+---
+
+*💡 이 설명서를 지우고 작업을 시작하세요!*
+
+---
+
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+  © 2025 Mrbaeksang. All rights reserved.<br/>
+  본 사이트와 모든 소스코드의 저작권은 Mrbaeksang에게 있습니다.
+</div>`;
     
-    if (templates[type]) {
-      setMarkdown(templates[type]);
-    }
+    setMarkdown(guideContent);
   };
+
+  const handleShowGuide = () => {
+    showGuide();
+  };
+
 
   return (
     <div className="app">
+      {/* Loading Spinner */}
+      {isExporting && <LoadingSpinner />}
+      
       {/* Navigation Bar */}
       <div className="navbar">
-        <div className="navbar-brand">📝 MD Converter Korean</div>
-        <div className="navbar-buttons">
-          <button className="nav-btn" onClick={handleNewDocument}>새 문서</button>
+        <button 
+          className="mobile-menu-btn"
+          onClick={() => setMobileSidebarVisible(!mobileSidebarVisible)}
+        >
+          <span className="material-symbols-outlined">
+            {mobileSidebarVisible ? 'close' : 'menu'}
+          </span>
+        </button>
+        <div className="navbar-brand">
+          <span className="material-symbols-outlined">edit_note</span>
+          MD 변환기 by <a href="https://devcom.kr" target="_blank" rel="noopener noreferrer">Mrbaeksang</a>
+        </div>
+        
+        {/* Mobile Tab Switcher - in header for mobile */}
+        <div className="mobile-tabs">
+          <button 
+            className={`mobile-tab ${mobileView === 'editor' ? 'active' : ''}`}
+            onClick={() => setMobileView('editor')}
+          >
+            편집
+          </button>
+          <button 
+            className={`mobile-tab ${mobileView === 'preview' ? 'active' : ''}`}
+            onClick={() => setMobileView('preview')}
+          >
+            미리보기
+          </button>
+        </div>
+        
+        <button 
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuVisible(!mobileMenuVisible)}
+        >
+          <span className="material-symbols-outlined">more_vert</span>
+        </button>
+        <div className={`navbar-buttons ${mobileMenuVisible ? 'mobile-visible' : ''}`}>
+          <button className="nav-btn" onClick={handleNewDocument}>
+            <span className="material-symbols-outlined">add</span>
+            새 문서
+          </button>
           <label className="nav-btn">
-            가져오기
+            <span className="material-symbols-outlined">upload_file</span>
+            파일 가져오기
             <input 
               type="file" 
-              accept=".md,.markdown,.txt,.csv" 
+              accept=".md,.markdown,.txt" 
               onChange={handleFileImport}
               style={{ display: 'none' }}
             />
           </label>
-          <button className="nav-btn primary" onClick={handleSaveDocument}>저장</button>
-          <button className="nav-btn">⚙️</button>
+          <button className="nav-btn" onClick={handleShowGuide}>
+            <span className="material-symbols-outlined">help</span>
+            설명서
+          </button>
+          {/* PC: Buy Me a Coffee 버튼만 */}
+          {!isMobile && (
+            <a 
+              href="https://buymeacoffee.com/mrbaeksang" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="nav-btn primary"
+              style={{ textDecoration: 'none' }}
+            >
+              <span className="material-symbols-outlined">favorite</span>
+              Buy Me a Coffee
+            </a>
+          )}
+          {/* 모바일: 메뉴에 두 가지 후원 옵션 */}
+          {isMobile && mobileMenuVisible && (
+            <>
+              <a 
+                href="https://qr.kakaopay.com/2810060110000071236650569c404083" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="nav-btn"
+                style={{ textDecoration: 'none' }}
+              >
+                <span className="material-symbols-outlined">coffee</span>
+                개발자에게 커피사주기(카카오)
+              </a>
+              <a 
+                href="https://buymeacoffee.com/mrbaeksang" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="nav-btn"
+                style={{ textDecoration: 'none' }}
+              >
+                <span className="material-symbols-outlined">favorite</span>
+                Buy Me a Coffee
+              </a>
+            </>
+          )}
         </div>
       </div>
       
       {/* Main Container */}
       <div className="main-container">
         {/* Sidebar */}
-        <div className="sidebar">
+        <div className={`sidebar ${mobileSidebarVisible ? 'mobile-visible' : ''}`}>
           <div className="sidebar-section">
-            <div className="sidebar-title">📁 최근 파일</div>
-            <div id="recentFiles">
-              {recentFiles.length === 0 ? (
-                <div className="sidebar-item">파일 없음</div>
-              ) : (
-                recentFiles.map((file, index) => (
-                  <div key={index} className="sidebar-item">{file}</div>
-                ))
-              )}
-            </div>
-          </div>
-          
-          <div className="sidebar-section">
-            <div className="sidebar-title">📝 템플릿</div>
-            <div className="sidebar-item" onClick={() => loadTemplate('readme')}>README</div>
-            <div className="sidebar-item" onClick={() => loadTemplate('blog')}>블로그</div>
-            <div className="sidebar-item" onClick={() => loadTemplate('report')}>보고서</div>
-          </div>
-          
-          <div className="sidebar-section">
-            <div className="sidebar-title">⬆️ 가져오기</div>
-            <label className="sidebar-item">
-              로컬 파일
-              <input 
-                type="file" 
-                accept=".md,.markdown,.txt,.csv" 
-                onChange={handleFileImport}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <div className="sidebar-item">URL에서</div>
-            <div className="sidebar-item">GitHub에서</div>
+            <div className="sidebar-title">내보내기</div>
+            <button className="sidebar-item" onClick={() => handleExport('html')}>
+              <span className="material-symbols-outlined">html</span>
+              HTML
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('styled-html')}>
+              <span className="material-symbols-outlined">palette</span>
+              Styled HTML
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('pdf')}>
+              <span className="material-symbols-outlined">picture_as_pdf</span>
+              PDF
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('docx')}>
+              <span className="material-symbols-outlined">article</span>
+              DOCX
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('excel')}>
+              <span className="material-symbols-outlined">table_view</span>
+              엑셀
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('txt')}>
+              <span className="material-symbols-outlined">description</span>
+              TXT
+            </button>
           </div>
         </div>
         
         {/* Content Area */}
         <div className="content-area">
           {/* Editor Panel */}
-          <div className="editor-panel">
+          <div className={`editor-panel ${isMobile && mobileView !== 'editor' ? 'mobile-hide' : ''}`}>
             <div className="panel-header">
               <span>마크다운 편집기</span>
               <span>단어: {wordCount.words} | 문자: {wordCount.chars}</span>
@@ -193,12 +362,9 @@ MIT`,
           </div>
           
           {/* Preview Panel */}
-          <div className="preview-panel">
+          <div className={`preview-panel ${isMobile && mobileView === 'preview' ? 'mobile-show' : ''}`}>
             <div className="panel-header">
               <span>미리보기</span>
-              <span>
-                <button onClick={() => {}}>👁️</button>
-              </span>
             </div>
             <div 
               className="preview-content"
@@ -210,18 +376,15 @@ MIT`,
       
       {/* Bottom Bar */}
       <div className="bottom-bar">
-        <div className="export-buttons">
-          <button className="export-btn" onClick={() => handleExport('html')}>HTML</button>
-          <button className="export-btn" onClick={() => handleExport('styled-html')}>Styled HTML</button>
-          <button className="export-btn" onClick={() => handleExport('pdf')}>PDF</button>
-          <button className="export-btn" onClick={() => handleExport('docx')}>DOCX</button>
-          <button className="export-btn" onClick={() => handleExport('excel')}>엑셀</button>
-          <button className="export-btn" onClick={() => handleExport('txt')}>TXT</button>
-        </div>
         <div className="status-info">
+          <span>단어: {wordCount.words}</span>
+          <span>문자: {wordCount.chars}</span>
+          <span>•</span>
           <span>UTF-8 ✓</span>
-          <span>한글 감지 ✓</span>
-          <span>자동 저장: ON</span>
+          <span>자동 저장 ON</span>
+        </div>
+        <div className="copyright">
+          © 2025 Mrbaeksang. All rights reserved.
         </div>
       </div>
     </div>
