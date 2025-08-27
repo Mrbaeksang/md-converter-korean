@@ -388,8 +388,8 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
           © 2025 Mrbaeksang. All rights reserved.
         </div>
       </div>
+      <Analytics />
     </div>
-    <Analytics />
   );
 }
 
