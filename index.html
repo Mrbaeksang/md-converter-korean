@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Converter Korean - 한글 깨짐 없는 마크다운 변환기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            background: #f8f9ff;
+        }
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #preview {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 MD Converter Korean</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            한글 깨짐 걱정 없는 마크다운 변환기
+        </p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p style="font-size: 48px; margin-bottom: 20px;">📄</p>
+            <p>마크다운 파일을 드래그하거나 클릭하여 선택하세요</p>
+            <input type="file" id="fileInput" accept=".md,.markdown" style="display: none;">
+        </div>
+        
+        <div id="preview"></div>
+        
+        <div class="buttons" id="convertButtons" style="display: none;">
+            <button onclick="convertTo('html')">HTML로 변환</button>
+            <button onclick="convertTo('styled-html')">Styled HTML로 변환</button>
+            <button onclick="convertTo('pdf')">PDF로 변환</button>
+            <button onclick="convertTo('docx')">Word로 변환</button>
+            <button onclick="convertTo('excel')">Excel로 변환 (테이블)</button>
+            <button onclick="convertTo('txt')">텍스트로 변환</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <p>변환 중... ⏳</p>
+        </div>
+    </div>
+
+    <script>
+        // 파일 업로드 처리
+        let currentMarkdown = '';
+        let currentFileName = '';
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const convertButtons = document.getElementById('convertButtons');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+        
+        function handleFile(file) {
+            if (!file || !file.name.match(/\.(md|markdown)$/i)) {
+                alert('마크다운 파일만 업로드 가능합니다.');
+                return;
+            }
+            
+            currentFileName = file.name.replace(/\.(md|markdown)$/i, '');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentMarkdown = e.target.result;
+                showPreview();
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        function showPreview() {
+            preview.innerHTML = '<h3>미리보기:</h3><pre>' + currentMarkdown.substring(0, 500) + 
+                               (currentMarkdown.length > 500 ? '...' : '') + '</pre>';
+            preview.style.display = 'block';
+            convertButtons.style.display = 'flex';
+        }
+        
+        function convertTo(format) {
+            console.log(`Converting to ${format}...`);
+            alert(`${format} 변환 기능 구현 예정`);
+            // TODO: 실제 변환 로직 구현
+        }
+    </script>
+</body>
+</html>
