@@ -263,9 +263,9 @@
     <div class="navbar">
         <div class="navbar-brand">📝 MD Converter Korean</div>
         <div class="navbar-buttons">
-            <button class="nav-btn" onclick="newDocument()">NEW</button>
-            <button class="nav-btn" onclick="importFile()">IMPORT</button>
-            <button class="nav-btn primary" onclick="saveDocument()">SAVE AS</button>
+            <button class="nav-btn" onclick="newDocument()">새 문서</button>
+            <button class="nav-btn" onclick="importFile()">가져오기</button>
+            <button class="nav-btn primary" onclick="saveDocument()">저장</button>
             <button class="nav-btn">⚙️</button>
         </div>
     </div>
@@ -276,23 +276,21 @@
         <div class="sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-title">📁 최근 파일</div>
-                <div class="sidebar-item active">새 문서.md</div>
-                <div class="sidebar-item">README.md</div>
-                <div class="sidebar-item">notes.md</div>
+                <div id="recentFiles"></div>
             </div>
             
             <div class="sidebar-section">
                 <div class="sidebar-title">📝 템플릿</div>
                 <div class="sidebar-item" onclick="loadTemplate('readme')">README</div>
-                <div class="sidebar-item" onclick="loadTemplate('blog')">Blog Post</div>
-                <div class="sidebar-item" onclick="loadTemplate('report')">Report</div>
+                <div class="sidebar-item" onclick="loadTemplate('blog')">블로그</div>
+                <div class="sidebar-item" onclick="loadTemplate('report')">보고서</div>
             </div>
             
             <div class="sidebar-section">
-                <div class="sidebar-title">⬆️ Import</div>
-                <div class="sidebar-item" onclick="importLocal()">Local File</div>
-                <div class="sidebar-item" onclick="importUrl()">From URL</div>
-                <div class="sidebar-item" onclick="importGithub()">GitHub</div>
+                <div class="sidebar-title">⬆️ 가져오기</div>
+                <div class="sidebar-item" onclick="importLocal()">로컬 파일</div>
+                <div class="sidebar-item" onclick="importUrl()">URL에서</div>
+                <div class="sidebar-item" onclick="importGithub()">GitHub에서</div>
             </div>
         </div>
         
@@ -301,39 +299,21 @@
             <!-- Editor Panel -->
             <div class="editor-panel">
                 <div class="panel-header">
-                    <span>MARKDOWN</span>
-                    <span id="wordCount">Words: 0 | Chars: 0</span>
+                    <span>마크다운 편집기</span>
+                    <span id="wordCount">단어: 0 | 문자: 0</span>
                 </div>
-                <textarea class="editor-textarea" id="editor" placeholder="# 마크다운을 입력하세요...
-
-여기에 마크다운을 작성하거나 붙여넣으세요.
-실시간으로 미리보기가 업데이트됩니다.
-
-## 지원 기능
-- 한글 완벽 지원
-- 실시간 미리보기
-- 다양한 형식으로 내보내기"></textarea>
+                <textarea class="editor-textarea" id="editor" placeholder=""></textarea>
             </div>
             
             <!-- Preview Panel -->
             <div class="preview-panel">
                 <div class="panel-header">
-                    <span>PREVIEW</span>
+                    <span>미리보기</span>
                     <span>
                         <button onclick="togglePreviewMode()">👁️</button>
                     </span>
                 </div>
-                <div class="preview-content" id="preview">
-                    <h1>마크다운을 입력하세요...</h1>
-                    <p>여기에 마크다운을 작성하거나 붙여넣으세요.<br>
-                    실시간으로 미리보기가 업데이트됩니다.</p>
-                    <h2>지원 기능</h2>
-                    <ul>
-                        <li>한글 완벽 지원</li>
-                        <li>실시간 미리보기</li>
-                        <li>다양한 형식으로 내보내기</li>
-                    </ul>
-                </div>
+                <div class="preview-content" id="preview"></div>
             </div>
         </div>
     </div>
@@ -345,7 +325,7 @@
             <button class="export-btn" onclick="exportAs('styled-html')">Styled HTML</button>
             <button class="export-btn" onclick="exportAs('pdf')">PDF</button>
             <button class="export-btn" onclick="exportAs('docx')">DOCX</button>
-            <button class="export-btn" onclick="exportAs('excel')">Excel</button>
+            <button class="export-btn" onclick="exportAs('excel')">엑셀</button>
             <button class="export-btn" onclick="exportAs('txt')">TXT</button>
         </div>
         <div class="status-info">
@@ -357,6 +337,9 @@
     
     <!-- Hidden file input -->
     <input type="file" id="fileInput" accept=".md,.markdown,.txt,.csv" style="display: none;">
+    
+    <!-- Converter Library -->
+    <script src="converter.js"></script>
     
     <script>
         const editor = document.getElementById('editor');
@@ -383,34 +366,30 @@
         });
         
         function updatePreview() {
-            // Simple markdown to HTML conversion (will be replaced with proper library)
-            let html = editor.value;
-            
-            // Headers
-            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-            
-            // Bold and italic
-            html = html.replace(/\*\*\*(.*)\*\*\*/gim, '<b><i>$1</i></b>');
-            html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
-            html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
-            
-            // Lists
-            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-            
-            // Line breaks
-            html = html.replace(/\n/gim, '<br>');
-            
-            preview.innerHTML = html;
+            // marked.js를 사용하여 변환 (converter.js의 함수 사용)
+            if (typeof markdownToHtml !== 'undefined') {
+                preview.innerHTML = markdownToHtml(editor.value);
+            } else {
+                // fallback
+                let html = editor.value;
+                html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                html = html.replace(/\*\*\*(.*)\*\*\*/gim, '<b><i>$1</i></b>');
+                html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
+                html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
+                html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+                html = html.replace(/\n/gim, '<br>');
+                preview.innerHTML = html;
+            }
         }
         
         function updateWordCount() {
             const text = editor.value;
             const words = text.trim().split(/\s+/).filter(word => word.length > 0).length;
             const chars = text.length;
-            wordCount.textContent = `Words: ${words} | Chars: ${chars}`;
+            wordCount.textContent = `단어: ${words} | 문자: ${chars}`;
         }
         
         function newDocument() {
@@ -438,10 +417,7 @@
             }
         });
         
-        function exportAs(format) {
-            console.log(`Exporting as ${format}...`);
-            alert(`${format} 변환 기능 구현 예정`);
-        }
+        // exportAs 함수는 converter.js에서 전역으로 정의됨
         
         function loadTemplate(type) {
             const templates = {
