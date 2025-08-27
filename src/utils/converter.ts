@@ -1,93 +1,29 @@
 // Markdown Converter with Korean Support
 // 한글 깨짐 없는 변환 기능 구현
 
-// marked.js 라이브러리 로드
-const loadScript = (src) => {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-};
+import { marked } from 'marked';
+import html2pdf from 'html2pdf.js';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
-// 라이브러리 초기화
-async function initLibraries() {
-    try {
-        // marked.js - Markdown parser
-        await loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js');
-        
-        // html2pdf.js - PDF 생성 (한글 폰트 포함)
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
-        
-        // docx - Word 문서 생성
-        await loadScript('https://unpkg.com/docx@7.1.1/build/index.js');
-        
-        // SheetJS - Excel 생성
-        await loadScript('https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js');
-        
-        console.log('모든 라이브러리 로드 완료');
-    } catch (error) {
-        console.error('라이브러리 로드 실패:', error);
-    }
-}
+// Type definitions
+export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'excel' | 'txt';
+
+// marked.js 설정
+marked.setOptions({
+    breaks: true,
+    gfm: true,
+    // @ts-ignore - sanitize는 deprecated지만 아직 사용 가능
+    sanitize: false
+});
 
 // Markdown을 HTML로 변환
-function markdownToHtml(markdown) {
-    if (typeof marked !== 'undefined') {
-        // marked 옵션 설정
-        marked.setOptions({
-            breaks: true,
-            gfm: true,
-            tables: true,
-            sanitize: false,
-            smartLists: true,
-            smartypants: false,
-            xhtml: false
-        });
-        
-        return marked.parse(markdown);
-    }
-    
-    // marked가 로드되지 않은 경우 기본 변환
-    return basicMarkdownToHtml(markdown);
-}
-
-// 기본 Markdown 변환 (fallback)
-function basicMarkdownToHtml(markdown) {
-    let html = markdown;
-    
-    // Headers
-    html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    
-    // Bold and italic
-    html = html.replace(/\*\*\*(.*)\*\*\*/gim, '<b><i>$1</i></b>');
-    html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
-    html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
-    
-    // Links
-    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, '<a href="$2">$1</a>');
-    
-    // Lists
-    html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-    
-    // Code blocks
-    html = html.replace(/```([^`]*)```/gim, '<pre><code>$1</code></pre>');
-    html = html.replace(/`([^`]*)`/gim, '<code>$1</code>');
-    
-    // Line breaks
-    html = html.replace(/\n/gim, '<br>');
-    
-    return html;
+export function markdownToHtml(markdown: string): string {
+    return marked.parse(markdown) as string;
 }
 
 // HTML Export with UTF-8 BOM
-function exportHtml(markdown, styled = false) {
+export function exportHtml(markdown: string, styled: boolean = false): void {
     const html = markdownToHtml(markdown);
     const BOM = '\uFEFF';
     
@@ -156,17 +92,12 @@ ${html}
 </html>`;
     
     const blob = new Blob([BOM + fullHtml], { type: 'text/html;charset=utf-8' });
-    downloadFile(blob, 'document.html');
+    saveAs(blob, 'document.html');
 }
 
 // PDF Export with Korean font support
-async function exportPdf(markdown) {
+export async function exportPdf(markdown: string): Promise<void> {
     const html = markdownToHtml(markdown);
-    
-    if (typeof html2pdf === 'undefined') {
-        alert('PDF 변환 라이브러리를 로드하는 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-    }
     
     // 임시 div 생성
     const tempDiv = document.createElement('div');
@@ -186,7 +117,7 @@ async function exportPdf(markdown) {
         jsPDF: { 
             unit: 'mm', 
             format: 'a4', 
-            orientation: 'portrait'
+            orientation: 'portrait' as const
         }
     };
     
@@ -201,19 +132,14 @@ async function exportPdf(markdown) {
 }
 
 // Text Export
-function exportTxt(markdown) {
+export function exportTxt(markdown: string): void {
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + markdown], { type: 'text/plain;charset=utf-8' });
-    downloadFile(blob, 'document.txt');
+    saveAs(blob, 'document.txt');
 }
 
 // Excel Export (테이블만)
-function exportExcel(markdown) {
-    if (typeof XLSX === 'undefined') {
-        alert('Excel 변환 라이브러리를 로드하는 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-    }
-    
+export function exportExcel(markdown: string): void {
     const html = markdownToHtml(markdown);
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
@@ -236,27 +162,14 @@ function exportExcel(markdown) {
 }
 
 // DOCX Export
-async function exportDocx(markdown) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function exportDocx(_markdown: string): Promise<void> {
     alert('DOCX 변환 기능은 개발 중입니다.');
     // TODO: docx.js를 사용한 구현
 }
 
-// 파일 다운로드 헬퍼
-function downloadFile(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// Export 함수들을 전역으로 노출
-window.exportAs = function(format) {
-    const markdown = document.getElementById('editor').value;
-    
+// Export function
+export function exportAs(format: ExportFormat, markdown: string): void {
     if (!markdown) {
         alert('변환할 내용을 입력해주세요.');
         return;
@@ -284,7 +197,4 @@ window.exportAs = function(format) {
         default:
             alert('지원하지 않는 형식입니다.');
     }
-};
-
-// 페이지 로드 시 라이브러리 초기화
-window.addEventListener('load', initLibraries);
+}
