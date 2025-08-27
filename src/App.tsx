@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { markdownToHtml, exportAs } from './utils/converter';
 import type { ExportFormat } from './utils/converter';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -388,6 +389,7 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
         </div>
       </div>
     </div>
+    <Analytics />
   );
 }
 
