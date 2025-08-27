@@ -92,6 +92,10 @@ function App() {
   const showGuide = () => {
     const guideContent = `# 📝 MD 변환기 by Mrbaeksang(devcom.kr)
 
+## 🎯 완벽 사용 가이드 보기!
+**사진과 함께 자세한 사용법을 확인하세요!**
+👉 [**https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj**](https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj)
+
 ## 🎯 소개
 ChatGPT와 같은 생성형 AI가 만들어주는 파일들이 한국어를 지원하지 않아 어려움을 겪는 분들을 위해 만든 **공익적 목적의 마크다운 변환 사이트**입니다.
 
