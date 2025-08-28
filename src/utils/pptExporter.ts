@@ -147,9 +147,9 @@ export async function markdownToPpt(markdown: string): Promise<void> {
   pres.company = 'devcom.kr';
   pres.title = 'Markdown Presentation';
   
-  // 레이아웃 정의
-  pres.defineLayout({ name: 'CUSTOM', width: 10, height: 7.5 });
-  pres.layout = 'CUSTOM';
+  // 레이아웃 정의 - 표준 16:9 비율
+  pres.defineLayout({ name: 'LAYOUT_16x9', width: 10, height: 5.625 });
+  pres.layout = 'LAYOUT_16x9';
   
   // 슬라이드 파싱
   const slides = parseMarkdownToSlides(markdown);
@@ -180,26 +180,28 @@ export async function markdownToPpt(markdown: string): Promise<void> {
       // 타이틀 슬라이드
       slide.addText(slideContent.title || '', {
         x: 0.5,
-        y: 2.5,
+        y: 1.8,
         w: 9,
-        h: 1.5,
-        fontSize: 44,
+        h: 1,
+        fontSize: 40,
         fontFace: '맑은 고딕',
         color: '333333',
         align: 'center',
-        bold: true
+        bold: true,
+        valign: 'middle'
       });
       
       if (slideContent.content.length > 0) {
         slide.addText(slideContent.content.join('\n'), {
           x: 1,
-          y: 4.5,
+          y: 3,
           w: 8,
-          h: 2,
-          fontSize: 20,
+          h: 1.5,
+          fontSize: 18,
           fontFace: '맑은 고딕',
           color: '666666',
-          align: 'center'
+          align: 'center',
+          valign: 'top'
         });
       }
     } 
@@ -208,13 +210,14 @@ export async function markdownToPpt(markdown: string): Promise<void> {
       if (slideContent.title) {
         slide.addText(slideContent.title, {
           x: 0.5,
-          y: 0.5,
+          y: 0.3,
           w: 9,
-          h: 1,
-          fontSize: 32,
+          h: 0.7,
+          fontSize: 28,
           fontFace: '맑은 고딕',
           color: '333333',
-          bold: true
+          bold: true,
+          valign: 'middle'
         });
       }
       
@@ -224,41 +227,44 @@ export async function markdownToPpt(markdown: string): Promise<void> {
       }));
       
       slide.addText(bullets, {
-        x: 1,
-        y: 2,
-        w: 8,
-        h: 5,
-        fontSize: 18,
+        x: 0.8,
+        y: 1.3,
+        w: 8.4,
+        h: 3.8,
+        fontSize: 16,
         fontFace: '맑은 고딕',
         color: '444444',
         bullet: { type: 'bullet' },
-        lineSpacing: 36
+        lineSpacing: 32,
+        valign: 'top'
       });
     }
     else if (slideContent.type === 'code') {
       // 코드 슬라이드
       slide.addText('코드', {
         x: 0.5,
-        y: 0.5,
+        y: 0.3,
         w: 9,
-        h: 0.8,
-        fontSize: 28,
+        h: 0.6,
+        fontSize: 24,
         fontFace: '맑은 고딕',
         color: '333333',
-        bold: true
+        bold: true,
+        valign: 'middle'
       });
       
       slide.addText(slideContent.content.join('\n'), {
         x: 0.5,
-        y: 1.5,
+        y: 1.1,
         w: 9,
-        h: 5.5,
-        fontSize: 14,
+        h: 4.2,
+        fontSize: 12,
         fontFace: 'Courier New',
         color: '333333',
         fill: { color: 'F5F5F5' },
         line: { color: 'DDDDDD', width: 1 },
-        margin: 10
+        margin: 8,
+        valign: 'top'
       });
     }
     else {
@@ -266,17 +272,18 @@ export async function markdownToPpt(markdown: string): Promise<void> {
       if (slideContent.title) {
         slide.addText(slideContent.title, {
           x: 0.5,
-          y: 0.5,
+          y: 0.3,
           w: 9,
-          h: 1,
-          fontSize: 32,
+          h: 0.7,
+          fontSize: 28,
           fontFace: '맑은 고딕',
           color: '333333',
-          bold: true
+          bold: true,
+          valign: 'middle'
         });
       }
       
-      const yStart = slideContent.title ? 2 : 1;
+      const yStart = slideContent.title ? 1.2 : 0.5;
       const content = slideContent.content.join('\n\n');
       
       if (content) {
@@ -284,12 +291,13 @@ export async function markdownToPpt(markdown: string): Promise<void> {
           x: 0.5,
           y: yStart,
           w: 9,
-          h: 7.5 - yStart - 0.5,
-          fontSize: 18,
+          h: 5.625 - yStart - 0.3,
+          fontSize: 16,
           fontFace: '맑은 고딕',
           color: '444444',
-          lineSpacing: 28,
-          valign: 'top'
+          lineSpacing: 24,
+          valign: 'top',
+          wrap: true
         });
       }
     }
@@ -297,14 +305,15 @@ export async function markdownToPpt(markdown: string): Promise<void> {
     // 슬라이드 번호 추가 (타이틀 슬라이드 제외)
     if (slideContent.type !== 'title') {
       slide.addText(`${index + 1}`, {
-        x: 9,
-        y: 6.8,
+        x: 9.2,
+        y: 5.2,
         w: 0.5,
         h: 0.3,
         fontSize: 10,
         fontFace: '맑은 고딕',
         color: '999999',
-        align: 'center'
+        align: 'center',
+        valign: 'middle'
       });
     }
   });
