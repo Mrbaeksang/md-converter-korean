@@ -284,7 +284,7 @@ body {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   background: var(--card);
   color: var(--foreground);
   font-size: 15px;
@@ -383,10 +383,11 @@ body {
   max-width: 100%;
   margin: 20px 0;
   border-radius: var(--radius);
-  overflow-x: auto;
-  display: block;
   border: 2px solid var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  table-layout: auto;
+  display: table;
+  overflow: visible;
 }
 
 .preview-content th,

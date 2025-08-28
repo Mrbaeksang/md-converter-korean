@@ -91,7 +91,11 @@ function stripMarkdownAndHtml(text: string): string {
 
 // 테이블인지 확인하는 함수
 function isTableLine(line: string): boolean {
-  return line.includes('|') && !line.match(/^\|?[\s\-:]+\|?$/);
+  // 파이프가 있고, 구분선이 아니며, 최소한 하나 이상의 문자가 있는 경우
+  const trimmed = line.trim();
+  return trimmed.includes('|') && 
+         !trimmed.match(/^\|?[\s\-:|]+\|?$/) && // 구분선이 아님
+         trimmed.replace(/[|\-:\s]/g, '').length > 0; // 실제 내용이 있음
 }
 
 // 테이블 구분선인지 확인
@@ -291,10 +295,13 @@ function parseMarkdownToSlides(markdown: string): SlideContent[] {
       }
     }
     
-    // 테이블 구분선
-    else if (isTableSeparator(trimmedLine) && inTable) {
-      // 구분선은 건너뛰기
-      continue;
+    // 테이블 구분선 - 테이블 파싱 중이면 건너뛰기
+    else if (isTableSeparator(trimmedLine)) {
+      if (inTable) {
+        // 구분선은 건너뛰기 (데이터로 포함하지 않음)
+        continue;
+      }
+      // 테이블이 아닌 경우 일반 구분선(---)으로 처리될 수 있음
     }
     
     // 코드 블록

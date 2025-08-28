@@ -130,8 +130,32 @@ export async function exportPdf(markdown: string): Promise<void> {
         // 직접 HTML과 스타일 삽입
         container.innerHTML = html;
         
+        // 테이블 열 개수 감지 - 가장 많은 열을 가진 테이블 찾기
+        let maxColumns = 0;
+        container.querySelectorAll('table').forEach(table => {
+            const firstRow = table.querySelector('tr');
+            if (firstRow) {
+                const columns = firstRow.querySelectorAll('th, td').length;
+                maxColumns = Math.max(maxColumns, columns);
+            }
+        });
+        
+        // 열 개수에 따른 페이지 설정
+        let orientation: 'portrait' | 'landscape' = 'portrait';
+        let tableScale = 1;
+        
+        if (maxColumns >= 8) {
+            // 8열 이상: 가로 모드
+            orientation = 'landscape';
+            console.log(`${maxColumns}열 테이블 감지 - 가로 모드로 전환`);
+        } else if (maxColumns >= 6) {
+            // 6-7열: 테이블 축소
+            tableScale = 0.85;
+            console.log(`${maxColumns}열 테이블 감지 - 85% 크기로 축소`);
+        }
+        
         // 인라인 스타일 적용
-        container.style.width = '794px'; // A4 width at 96 DPI
+        container.style.width = orientation === 'landscape' ? '1122px' : '794px'; // A4 width at 96 DPI
         container.style.padding = '40px';
         container.style.background = 'white';
         container.style.fontFamily = "'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif";
@@ -170,7 +194,13 @@ export async function exportPdf(markdown: string): Promise<void> {
         // table 스타일
         container.querySelectorAll('table').forEach(table => {
             (table as HTMLElement).style.borderCollapse = 'collapse';
-            (table as HTMLElement).style.width = '100%';
+            // 6-7열 테이블은 크기 축소
+            if (tableScale < 1) {
+                (table as HTMLElement).style.width = `${100 * tableScale}%`;
+                (table as HTMLElement).style.fontSize = `${14 * tableScale}px`;
+            } else {
+                (table as HTMLElement).style.width = '100%';
+            }
             (table as HTMLElement).style.margin = '15px 0';
             // 테이블 전체가 나뉘지 않도록 설정
             (table as HTMLElement).style.pageBreakInside = 'avoid';
@@ -238,7 +268,7 @@ export async function exportPdf(markdown: string): Promise<void> {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'portrait' as const
+                orientation: orientation // 동적으로 설정
             },
             pagebreak: { 
                 mode: ['avoid-all', 'css'], // css 모드를 추가하여 pageBreakInside 속성을 더 잘 인식
