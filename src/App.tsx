@@ -94,7 +94,7 @@ function App() {
 
 ## 🎯 완벽 사용 가이드 보기!
 **사진과 함께 자세한 사용법을 확인하세요!**
-👉 [**📸 스크린샷과 함께 사용법 보기 →**](https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj)
+👉 <a href="https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj" target="_blank" rel="noopener noreferrer">**📸 스크린샷과 함께 사용법 보기 →**</a>
 
 ## 🎯 소개
 ChatGPT와 같은 생성형 AI가 만들어주는 파일들이 한국어를 지원하지 않아 어려움을 겪는 분들을 위해 만든 **공익적 목적의 마크다운 변환 사이트**입니다.
@@ -143,7 +143,7 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
   <a href="https://devcom.kr" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
     🌐 개발자 사이트
   </a>
-  <a href="mailto:qortkdgus95@gmail.com" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
+  <a href="mailto:qortkdgus95@gmail.com" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
     ✉️ 문의/버그 제보
   </a>
   <a href="https://www.instagram.com/baek.__.sang/" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px; text-decoration: none; color: #141414; transition: all 0.2s;">
@@ -300,7 +300,7 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
                 style={{ textDecoration: 'none' }}
               >
                 <span className="material-symbols-outlined">coffee</span>
-                개발자에게 커피사주기(카카오)
+                커피 후원하기(카카오톡)
               </a>
               <a 
                 href="https://buymeacoffee.com/mrbaeksang" 
