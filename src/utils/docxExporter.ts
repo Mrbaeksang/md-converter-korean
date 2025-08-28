@@ -394,169 +394,170 @@ export async function markdownToDocx(markdown: string): Promise<void> {
       const children: (Paragraph | Table)[] = [];
       console.log('Starting element processing...');
 
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
-      
-      // 주기적으로 브라우저가 응답할 수 있도록 함
-      if (i % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
-    switch (element.type) {
-      case 'heading': {
-        const headingLevel = element.level === 1 ? HeadingLevel.HEADING_1 :
-                           element.level === 2 ? HeadingLevel.HEADING_2 :
-                           element.level === 3 ? HeadingLevel.HEADING_3 :
-                           element.level === 4 ? HeadingLevel.HEADING_4 :
-                           element.level === 5 ? HeadingLevel.HEADING_5 :
-                           HeadingLevel.HEADING_6;
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
         
-        children.push(
-          new Paragraph({
-            text: element.content || '',
-            heading: headingLevel,
-            spacing: {
-              before: 240,
-              after: 120
-            }
-          })
-        );
-        break;
-      }
-
-      case 'paragraph':
-        if (element.content) {
-          children.push(
-            new Paragraph({
-              children: processInlineMarkdown(element.content),
-              spacing: {
-                after: 120
-              }
-            })
-          );
+        // 주기적으로 브라우저가 응답할 수 있도록 함
+        if (i % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 0));
         }
-        break;
-
-      case 'list':
-        if (element.items) {
-          element.items.forEach((item) => {
+        
+        switch (element.type) {
+          case 'heading': {
+            const headingLevel = element.level === 1 ? HeadingLevel.HEADING_1 :
+                               element.level === 2 ? HeadingLevel.HEADING_2 :
+                               element.level === 3 ? HeadingLevel.HEADING_3 :
+                               element.level === 4 ? HeadingLevel.HEADING_4 :
+                               element.level === 5 ? HeadingLevel.HEADING_5 :
+                               HeadingLevel.HEADING_6;
+            
             children.push(
               new Paragraph({
-                children: processInlineMarkdown(item),
-                bullet: element.ordered ? undefined : {
-                  level: 0
-                },
-                numbering: element.ordered ? {
-                  reference: 'default-numbering',
-                  level: 0
-                } : undefined
-              })
-            );
-          });
-        }
-        break;
-
-      case 'blockquote':
-        if (element.content) {
-          children.push(
-            new Paragraph({
-              children: processInlineMarkdown(element.content),
-              indent: {
-                left: convertInchesToTwip(0.5)
-              },
-              border: {
-                left: {
-                  color: '999999',
-                  space: 10,
-                  style: BorderStyle.SINGLE,
-                  size: 6
-                }
-              },
-              spacing: {
-                after: 120
-              }
-            })
-          );
-        }
-        break;
-
-      case 'code':
-        if (element.content) {
-          const codeLines = element.content.split('\n');
-          codeLines.forEach(line => {
-            children.push(
-              new Paragraph({
-                children: [new TextRun({
-                  text: line || ' ',
-                  font: 'Courier New'
-                })],
-                shading: {
-                  type: 'clear',
-                  fill: 'F0F0F0'
-                },
+                text: element.content || '',
+                heading: headingLevel,
                 spacing: {
-                  after: 0
+                  before: 240,
+                  after: 120
                 }
               })
             );
-          });
-          // 코드 블록 후 간격 추가
-          children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
-        }
-        break;
+            break;
+          }
 
-      case 'hr':
-        children.push(
-          new Paragraph({
-            text: '',
-            border: {
-              bottom: {
-                color: 'auto',
-                space: 1,
-                style: BorderStyle.SINGLE,
-                size: 6
-              }
+          case 'paragraph':
+            if (element.content) {
+              children.push(
+                new Paragraph({
+                  children: processInlineMarkdown(element.content),
+                  spacing: {
+                    after: 120
+                  }
+                })
+              );
             }
-          })
-        );
-        break;
+            break;
 
-      case 'table':
-        if (element.rows && element.rows.length > 0) {
-          // 실제 Word 표 생성
-          const table = new Table({
-            rows: element.rows.map((row, rowIndex) => 
-              new TableRow({
-                children: row.map(cell => 
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: processInlineMarkdown(cell),
-                      alignment: AlignmentType.LEFT
+          case 'list':
+            if (element.items) {
+              element.items.forEach((item) => {
+                children.push(
+                  new Paragraph({
+                    children: processInlineMarkdown(item),
+                    bullet: element.ordered ? undefined : {
+                      level: 0
+                    },
+                    numbering: element.ordered ? {
+                      reference: 'default-numbering',
+                      level: 0
+                    } : undefined
+                  })
+                );
+              });
+            }
+            break;
+
+          case 'blockquote':
+            if (element.content) {
+              children.push(
+                new Paragraph({
+                  children: processInlineMarkdown(element.content),
+                  indent: {
+                    left: convertInchesToTwip(0.5)
+                  },
+                  border: {
+                    left: {
+                      color: '999999',
+                      space: 10,
+                      style: BorderStyle.SINGLE,
+                      size: 6
+                    }
+                  },
+                  spacing: {
+                    after: 120
+                  }
+                })
+              );
+            }
+            break;
+
+          case 'code':
+            if (element.content) {
+              const codeLines = element.content.split('\n');
+              codeLines.forEach(line => {
+                children.push(
+                  new Paragraph({
+                    children: [new TextRun({
+                      text: line || ' ',
+                      font: 'Courier New'
                     })],
-                    shading: rowIndex === 0 ? {
+                    shading: {
                       type: 'clear',
-                      fill: 'E8E8E8'
-                    } : undefined,
-                    width: {
-                      size: 100 / row.length,
-                      type: WidthType.PERCENTAGE
+                      fill: 'F0F0F0'
+                    },
+                    spacing: {
+                      after: 0
                     }
                   })
-                )
-              })
-            ),
-            width: {
-              size: 100,
-              type: WidthType.PERCENTAGE
+                );
+              });
+              // 코드 블록 후 간격 추가
+              children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
             }
-          });
-          
-          children.push(table);
-          // 표 후 간격 추가
-          children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
+            break;
+
+          case 'hr':
+            children.push(
+              new Paragraph({
+                text: '',
+                border: {
+                  bottom: {
+                    color: 'auto',
+                    space: 1,
+                    style: BorderStyle.SINGLE,
+                    size: 6
+                  }
+                }
+              })
+            );
+            break;
+
+          case 'table':
+            if (element.rows && element.rows.length > 0) {
+              // 실제 Word 표 생성
+              const table = new Table({
+                rows: element.rows.map((row, rowIndex) => 
+                  new TableRow({
+                    children: row.map(cell => 
+                      new TableCell({
+                        children: [new Paragraph({
+                          children: processInlineMarkdown(cell),
+                          alignment: AlignmentType.LEFT
+                        })],
+                        shading: rowIndex === 0 ? {
+                          type: 'clear',
+                          fill: 'E8E8E8'
+                        } : undefined,
+                        width: {
+                          size: 100 / row.length,
+                          type: WidthType.PERCENTAGE
+                        }
+                      })
+                    )
+                  })
+                ),
+                width: {
+                  size: 100,
+                  type: WidthType.PERCENTAGE
+                }
+              });
+              
+              children.push(table);
+              // 표 후 간격 추가
+              children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
+            }
+            break;
         }
-        break;
-    }
-  }
+      }
 
     return children;
     };
