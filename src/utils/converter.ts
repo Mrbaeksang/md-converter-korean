@@ -16,8 +16,10 @@ export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'excel' | '
 
 // Custom renderer for links to open in new tab
 const renderer = new marked.Renderer();
-renderer.link = (href, title, text) => {
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${title ? `title="${title}"` : ''}>${text}</a>`;
+renderer.link = function(href: string | null, title: string | null, text: string): string {
+    const link = href || '';
+    const titleAttr = title ? `title="${title}"` : '';
+    return `<a href="${link}" target="_blank" rel="noopener noreferrer" ${titleAttr}>${text}</a>`;
 };
 
 // marked.js 설정
