@@ -1,4 +1,8 @@
-function LoadingSpinner() {
+interface LoadingSpinnerProps {
+  message?: string;
+}
+
+function LoadingSpinner({ message = "처리 중..." }: LoadingSpinnerProps) {
   return (
     <div className="loading-overlay">
       <div className="loading-content">
@@ -42,7 +46,7 @@ function LoadingSpinner() {
             />
           </circle>
         </svg>
-        <p className="loading-text">PDF 생성 중...</p>
+        <p className="loading-text">{message}</p>
       </div>
     </div>
   );
