@@ -257,7 +257,6 @@ export async function exportPdf(markdown: string): Promise<void> {
                 
                 // 분할된 테이블들을 저장할 배열
                 const splitTables: HTMLTableElement[] = [];
-                let currentPartRows: Element[] = [];
                 let partNumber = 1;
                 
                 // 데이터 행을 MAX_ROWS_PER_PAGE씩 분할
