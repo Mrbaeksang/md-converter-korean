@@ -94,7 +94,7 @@ function App() {
 
 ## 🎯 완벽 사용 가이드 보기!
 **사진과 함께 자세한 사용법을 확인하세요!**
-👉 <a href="https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj" target="_blank" rel="noopener noreferrer">**📸 스크린샷과 함께 사용법 보기 →**</a>
+👉 [**📸 스크린샷과 함께 사용법 보기 →**](https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj)
 
 ## 🎯 소개
 ChatGPT와 같은 생성형 AI가 만들어주는 파일들이 한국어를 지원하지 않아 어려움을 겪는 분들을 위해 만든 **공익적 목적의 마크다운 변환 사이트**입니다.
