@@ -18,16 +18,13 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // localStorage에서 저장된 내용 불러오기
-    const saved = localStorage.getItem('markdown-content');
-    const hasVisited = localStorage.getItem('has-visited');
+    // 항상 설명서 표시 (새로고침 포함)
+    showGuide();
     
+    // 최초 방문 체크는 유지 (통계 등을 위해)
+    const hasVisited = localStorage.getItem('has-visited');
     if (!hasVisited) {
-      // 첫 방문시 설명서 표시
-      showGuide();
       localStorage.setItem('has-visited', 'true');
-    } else if (saved) {
-      setMarkdown(saved);
     }
     
     // 최근 파일 목록 불러오기
@@ -101,6 +98,53 @@ function App() {
 
 > 💡 **사용법을 까먹으셨나요?** 언제든지 상단의 **설명서** 버튼을 다시 누르면 이 화면을 볼 수 있습니다!
 
+## ☕ 개발자에게 커피 후원하기
+이 도구가 도움이 되셨다면 개발자는 행복합니다 😊
+개발자에게 커피 한 잔은 큰 힘이 됩니다!
+
+<div style="display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; align-items: center;">
+  <!-- 모바일: 카카오페이 링크 버튼 -->
+  <a href="https://qr.kakaopay.com/2810060110000071236650569c404083" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FEE500 0%, #FFEB00 100%); border-radius: 8px; text-decoration: none; color: #3C1E1E; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    💛 카카오페이로 커피 후원하기
+  </a>
+  
+  <!-- PC: 카카오페이 QR -->
+  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <img src="${kakaoQR}" alt="카카오페이 QR" style="width: 160px; height: 160px; border-radius: 8px;" />
+    <span style="font-size: 14px; color: #3C1E1E; font-weight: 600;">💛 카카오페이 QR</span>
+    <span style="font-size: 12px; color: #6b7280;">스캔하여 후원하기</span>
+  </div>
+
+  <!-- 모바일: Buy Me a Coffee 링크 버튼 -->
+  <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FFDD00 0%, #FBB034 100%); border-radius: 8px; text-decoration: none; color: #141414; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    ☕ Buy Me a Coffee
+  </a>
+  
+  <!-- PC: Buy Me a Coffee QR + 링크 -->
+  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+    <div style="padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+        <img src="${buymeacoffeeQR}" alt="Buy Me a Coffee QR" style="width: 160px; height: 160px; border-radius: 8px; cursor: pointer;" />
+      </a>
+      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="font-size: 14px; color: #141414; font-weight: 600; text-decoration: none;">☕ Buy Me a Coffee</a>
+      <span style="font-size: 12px; color: #6b7280;">스캔 또는 클릭</span>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+  .mobile-only { display: inline-flex !important; }
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: flex !important; }
+}
+</style>
+
+---
+
 ## 🎯 완벽 사용 가이드 보기!
 **사진과 함께 자세한 사용법을 확인하세요!**
 👉 [**📸 스크린샷과 함께 사용법 보기 →**](https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj)
@@ -161,50 +205,6 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
   </a>
 </div>
 
-## ☕ 개발자에게 커피 후원하기
-이 도구가 도움이 되셨다면 개발자는 행복합니다 😊
-개발자에게 커피 한 잔은 큰 힘이 됩니다!
-
-<div style="display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; align-items: center;">
-  <!-- 모바일: 카카오페이 링크 버튼 -->
-  <a href="https://qr.kakaopay.com/2810060110000071236650569c404083" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FEE500 0%, #FFEB00 100%); border-radius: 8px; text-decoration: none; color: #3C1E1E; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    💛 카카오페이로 커피 후원하기
-  </a>
-  
-  <!-- PC: 카카오페이 QR -->
-  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    <img src="${kakaoQR}" alt="카카오페이 QR" style="width: 160px; height: 160px; border-radius: 8px;" />
-    <span style="font-size: 14px; color: #3C1E1E; font-weight: 600;">💛 카카오페이 QR</span>
-    <span style="font-size: 12px; color: #6b7280;">스캔하여 후원하기</span>
-  </div>
-
-  <!-- 모바일: Buy Me a Coffee 링크 버튼 -->
-  <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FFDD00 0%, #FBB034 100%); border-radius: 8px; text-decoration: none; color: #141414; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    ☕ Buy Me a Coffee
-  </a>
-  
-  <!-- PC: Buy Me a Coffee QR + 링크 -->
-  <div class="desktop-only" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
-    <div style="padding: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 8px;">
-      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-        <img src="${buymeacoffeeQR}" alt="Buy Me a Coffee QR" style="width: 160px; height: 160px; border-radius: 8px; cursor: pointer;" />
-      </a>
-      <a href="https://buymeacoffee.com/mrbaeksang" target="_blank" rel="noopener noreferrer" style="font-size: 14px; color: #141414; font-weight: 600; text-decoration: none;">☕ Buy Me a Coffee</a>
-      <span style="font-size: 12px; color: #6b7280;">스캔 또는 클릭</span>
-    </div>
-  </div>
-</div>
-
-<style>
-@media (max-width: 768px) {
-  .mobile-only { display: inline-flex !important; }
-  .desktop-only { display: none !important; }
-}
-@media (min-width: 769px) {
-  .mobile-only { display: none !important; }
-  .desktop-only { display: flex !important; }
-}
-</style>
 
 ---
 

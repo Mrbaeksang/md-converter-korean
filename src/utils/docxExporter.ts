@@ -28,8 +28,14 @@ interface ParsedElement {
 
 // HTML 태그 제거 함수
 function stripHtmlTags(text: string): string {
+  // onclick 등 이벤트 핸들러가 포함된 버튼 완전 제거
+  text = text.replace(/<button[^>]*onclick[^>]*>[\s\S]*?<\/button>/gi, '');
+  
   // HTML 블록 전체 제거 (div, style, script 등)
   text = text.replace(/<(style|script|div|span)[^>]*>[\s\S]*?<\/\1>/gi, '');
+  
+  // 버튼 태그의 내용만 추출
+  text = text.replace(/<button[^>]*>([^<]*)<\/button>/gi, '$1');
   
   // 나머지 HTML 태그 제거
   text = text.replace(/<[^>]+>/g, '');
@@ -62,8 +68,8 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     safetyCounter++;
     let line = lines[i];
     
-    // HTML 블록 건너뛰기
-    if (line.trim().startsWith('<div') || line.trim().startsWith('<style')) {
+    // HTML 블록 건너뛰기 (button, div, style 등)
+    if (line.trim().startsWith('<button') || line.trim().startsWith('<div') || line.trim().startsWith('<style')) {
       let depth = 1;
       const tagMatch = line.match(/<(\w+)/);
       const tagName = tagMatch ? tagMatch[1] : 'div';
@@ -83,6 +89,12 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       if (htmlSafetyCounter >= maxHtmlLines) {
         console.warn(`HTML block processing exceeded limit for tag: ${tagName}`);
       }
+      continue;
+    }
+    
+    // onclick 등이 포함된 라인 건너뛰기
+    if (line.includes('onclick=') || line.includes('.catch(') || line.includes('.then(')) {
+      i++;
       continue;
     }
 

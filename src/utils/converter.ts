@@ -130,14 +130,16 @@ export async function exportPdf(markdown: string): Promise<void> {
         // 직접 HTML과 스타일 삽입
         container.innerHTML = html;
         
-        // 인라인 스타일 적용
-        container.style.width = '794px'; // A4 width at 96 DPI
-        container.style.padding = '40px';
+        // 인라인 스타일 적용 - 더 안전한 너비 설정
+        container.style.width = '100%';
+        container.style.maxWidth = '750px'; // 좀 더 좁게 설정하여 여백 확보
+        container.style.padding = '30px';
         container.style.background = 'white';
         container.style.fontFamily = "'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif";
         container.style.fontSize = '14px';
         container.style.lineHeight = '1.6';
         container.style.color = 'black';
+        container.style.boxSizing = 'border-box';
         
         // 모든 요소에 스타일 적용
         const allElements = container.querySelectorAll('*');
@@ -167,21 +169,33 @@ export async function exportPdf(markdown: string): Promise<void> {
             (h2 as HTMLElement).style.marginBottom = '18px';
         });
         
-        // table 스타일
+        // table 스타일 - 오버플로우 방지 및 페이지 분할 방지
         container.querySelectorAll('table').forEach(table => {
             (table as HTMLElement).style.borderCollapse = 'collapse';
             (table as HTMLElement).style.width = '100%';
             (table as HTMLElement).style.margin = '15px 0';
+            (table as HTMLElement).style.tableLayout = 'fixed'; // 테이블 레이아웃 고정
+            (table as HTMLElement).style.wordBreak = 'break-word'; // 긴 텍스트 줄바꿈
+            (table as HTMLElement).style.pageBreakInside = 'avoid'; // 테이블이 페이지 중간에서 잘리지 않도록
+            (table as HTMLElement).style.breakInside = 'avoid';
         });
         
         container.querySelectorAll('th, td').forEach(cell => {
             (cell as HTMLElement).style.border = '1px solid black';
             (cell as HTMLElement).style.padding = '8px';
+            (cell as HTMLElement).style.wordBreak = 'break-word'; // 셀 내용 줄바꿈
+            (cell as HTMLElement).style.overflowWrap = 'break-word';
         });
         
         container.querySelectorAll('th').forEach(th => {
             (th as HTMLElement).style.background = '#f0f0f0';
             (th as HTMLElement).style.fontWeight = 'bold';
+        });
+        
+        // 테이블 행 페이지 분할 방지
+        container.querySelectorAll('tr').forEach(row => {
+            (row as HTMLElement).style.pageBreakInside = 'avoid';
+            (row as HTMLElement).style.breakInside = 'avoid';
         });
         
         // 코드 블록 스타일 + 페이지 잘림 방지
@@ -195,7 +209,21 @@ export async function exportPdf(markdown: string): Promise<void> {
                 (codeBlock as HTMLElement).style.borderRadius = '5px';
                 (codeBlock as HTMLElement).style.whiteSpace = 'pre-wrap';
                 (codeBlock as HTMLElement).style.wordBreak = 'break-word';
+                (codeBlock as HTMLElement).style.overflowWrap = 'break-word';
+                (codeBlock as HTMLElement).style.maxWidth = '100%';
             }
+        });
+        
+        // 단락과 리스트 아이템 오버플로우 처리
+        container.querySelectorAll('p, li').forEach(element => {
+            (element as HTMLElement).style.wordBreak = 'break-word';
+            (element as HTMLElement).style.overflowWrap = 'break-word';
+        });
+        
+        // 이미지 크기 제한
+        container.querySelectorAll('img').forEach(img => {
+            (img as HTMLElement).style.maxWidth = '100%';
+            (img as HTMLElement).style.height = 'auto';
         });
         
         // DOM에 추가
@@ -216,7 +244,7 @@ export async function exportPdf(markdown: string): Promise<void> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const opt = {
-            margin: 10,
+            margin: [15, 15, 15, 15], // 상, 우, 하, 좌 여백 (mm 단위) - 충분한 여백 확보
             filename: 'document.pdf',
             image: { 
                 type: 'jpeg', 
@@ -226,7 +254,9 @@ export async function exportPdf(markdown: string): Promise<void> {
                 scale: 2,
                 useCORS: true,
                 logging: true, // 로깅 활성화
-                backgroundColor: '#FFFFFF'
+                backgroundColor: '#FFFFFF',
+                width: 750, // 컨테이너 너비에 맞춤
+                windowWidth: 850 // 뷰포트 너비
             },
             jsPDF: { 
                 unit: 'mm', 
@@ -234,8 +264,8 @@ export async function exportPdf(markdown: string): Promise<void> {
                 orientation: 'portrait' as const
             },
             pagebreak: { 
-                mode: 'avoid-all', // 요소가 페이지 경계에서 잘리지 않도록
-                avoid: ['tr', 'pre', 'code', '.code-block'] // 테이블 행과 코드 블록 잘림 방지
+                mode: ['avoid-all', 'css', 'legacy'], // 다양한 페이지 브레이크 모드 적용
+                avoid: ['tr', 'pre', 'code', '.code-block', 'td', 'th'] // 테이블 셀도 잘림 방지
             }
         };
         
