@@ -416,41 +416,65 @@ export function exportExcel(markdown: string): void {
 // DOCX Export - 동적으로 import
 export async function exportDocx(markdown: string): Promise<void> {
     try {
+        console.log('Starting DOCX export...');
+        console.log('Importing docxExporter module...');
         const { markdownToDocx } = await import('./docxExporter');
+        console.log('docxExporter module loaded successfully');
+        console.log('Calling markdownToDocx function...');
         await markdownToDocx(markdown);
+        console.log('DOCX export completed successfully');
     } catch (error) {
-        console.error('DOCX export error:', error);
+        console.error('DOCX export error details:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         alert('DOCX 내보내기 중 오류가 발생했습니다. 다른 형식을 시도해주세요.');
+        throw error;
     }
 }
 
 // Export function
 export async function exportAs(format: ExportFormat, markdown: string): Promise<void> {
+    console.log(`exportAs called with format: ${format}`);
+    
     if (!markdown) {
         alert('변환할 내용을 입력해주세요.');
         return;
     }
     
-    switch(format) {
-        case 'html':
-            exportHtml(markdown, false);
-            break;
-        case 'styled-html':
-            exportHtml(markdown, true);
-            break;
-        case 'pdf':
-            await exportPdf(markdown);
-            break;
-        case 'docx':
-            await exportDocx(markdown);
-            break;
-        case 'excel':
-            exportExcel(markdown);
-            break;
-        case 'txt':
-            exportTxt(markdown);
-            break;
-        default:
-            alert('지원하지 않는 형식입니다.');
+    console.log(`Processing export for format: ${format}`);
+    
+    try {
+        switch(format) {
+            case 'html':
+                console.log('Exporting as HTML...');
+                exportHtml(markdown, false);
+                break;
+            case 'styled-html':
+                console.log('Exporting as Styled HTML...');
+                exportHtml(markdown, true);
+                break;
+            case 'pdf':
+                console.log('Exporting as PDF...');
+                await exportPdf(markdown);
+                break;
+            case 'docx':
+                console.log('Exporting as DOCX...');
+                await exportDocx(markdown);
+                break;
+            case 'excel':
+                console.log('Exporting as Excel...');
+                exportExcel(markdown);
+                break;
+            case 'txt':
+                console.log('Exporting as TXT...');
+                exportTxt(markdown);
+                break;
+            default:
+                console.error(`Unsupported format: ${format}`);
+                alert('지원하지 않는 형식입니다.');
+        }
+        console.log(`Export function completed for ${format}`);
+    } catch (error) {
+        console.error(`Error in exportAs switch for ${format}:`, error);
+        throw error;
     }
 }

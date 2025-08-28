@@ -75,13 +75,17 @@ function App() {
   };
 
   const handleExport = async (format: string) => {
+    console.log(`Starting export for format: ${format}`);
     setIsExporting(true);
     try {
+      console.log('Calling exportAs function...');
       await exportAs(format as ExportFormat, markdown);
+      console.log(`Export completed for format: ${format}`);
     } catch (error) {
       console.error(`Export error for ${format}:`, error);
       alert(`${format.toUpperCase()} 내보내기 중 오류가 발생했습니다. 다른 형식을 시도해주세요.`);
     } finally {
+      console.log('Setting isExporting to false');
       setIsExporting(false);
     }
   };
