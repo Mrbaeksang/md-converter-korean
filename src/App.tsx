@@ -328,27 +328,27 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
         <div className={`sidebar ${mobileSidebarVisible ? 'mobile-visible' : ''}`}>
           <div className="sidebar-section">
             <div className="sidebar-title">내보내기</div>
-            <button className="sidebar-item" onClick={() => handleExport('html')}>
+            <button className="sidebar-item" onClick={() => handleExport('html')} disabled={isExporting}>
               <span className="material-symbols-outlined">html</span>
               HTML
             </button>
-            <button className="sidebar-item" onClick={() => handleExport('styled-html')}>
+            <button className="sidebar-item" onClick={() => handleExport('styled-html')} disabled={isExporting}>
               <span className="material-symbols-outlined">palette</span>
               Styled HTML
             </button>
-            <button className="sidebar-item" onClick={() => handleExport('pdf')}>
+            <button className="sidebar-item" onClick={() => handleExport('pdf')} disabled={isExporting}>
               <span className="material-symbols-outlined">picture_as_pdf</span>
               PDF
             </button>
-            <button className="sidebar-item" onClick={() => handleExport('docx')}>
+            <button className="sidebar-item" onClick={() => handleExport('docx')} disabled={isExporting}>
               <span className="material-symbols-outlined">article</span>
               DOCX
             </button>
-            <button className="sidebar-item" onClick={() => handleExport('excel')}>
+            <button className="sidebar-item" onClick={() => handleExport('excel')} disabled={isExporting}>
               <span className="material-symbols-outlined">table_view</span>
               엑셀
             </button>
-            <button className="sidebar-item" onClick={() => handleExport('txt')}>
+            <button className="sidebar-item" onClick={() => handleExport('txt')} disabled={isExporting}>
               <span className="material-symbols-outlined">description</span>
               TXT
             </button>
@@ -397,6 +397,8 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
           © 2025 Mrbaeksang. All rights reserved.
         </div>
       </div>
+      {/* Loading Spinner - 모든 내보내기에서 표시 */}
+      {isExporting && <LoadingSpinner message="파일을 생성하고 있습니다..." />}
       <Analytics />
     </div>
   );
