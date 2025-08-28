@@ -354,7 +354,7 @@ export function exportExcel(markdown: string): void {
     tables.forEach(t => console.log(`- ${t.name}: ${t.data.length}행`));
     
     if (tables.length === 0) {
-        alert('마크다운에서 표를 찾을 수 없습니다.');
+        alert('표가 없습니다!\n\n표를 만들려면:\n1. | 기호로 열을 구분해서 작성하세요\n2. 예시: | 이름 | 나이 | 직업 |\n\n자세한 사용법은 상단의 "설명서"를 확인해주세요.');
         return;
     }
     
