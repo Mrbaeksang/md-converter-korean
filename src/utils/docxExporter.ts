@@ -50,11 +50,16 @@ function stripHtmlTags(text: string): string {
 
 // 마크다운 파싱 함수
 function parseMarkdown(markdown: string): ParsedElement[] {
+  console.log('parseMarkdown called with length:', markdown.length);
   const elements: ParsedElement[] = [];
   const lines = markdown.split('\n');
+  console.log('Split into lines:', lines.length);
   let i = 0;
+  let safetyCounter = 0;
+  const maxLines = 10000; // 안전 장치
 
-  while (i < lines.length) {
+  while (i < lines.length && safetyCounter < maxLines) {
+    safetyCounter++;
     let line = lines[i];
     
     // HTML 블록 건너뛰기
@@ -64,11 +69,19 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       const tagName = tagMatch ? tagMatch[1] : 'div';
       i++;
       
-      while (i < lines.length && depth > 0) {
+      let htmlSafetyCounter = 0;
+      const maxHtmlLines = 100; // HTML 블록 최대 라인 수 제한
+      
+      while (i < lines.length && depth > 0 && htmlSafetyCounter < maxHtmlLines) {
+        htmlSafetyCounter++;
         const openTags = (lines[i].match(new RegExp(`<${tagName}`, 'g')) || []).length;
         const closeTags = (lines[i].match(new RegExp(`</${tagName}>`, 'g')) || []).length;
         depth += openTags - closeTags;
         i++;
+      }
+      
+      if (htmlSafetyCounter >= maxHtmlLines) {
+        console.warn(`HTML block processing exceeded limit for tag: ${tagName}`);
       }
       continue;
     }
@@ -105,16 +118,30 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       const language = line.slice(3).trim();
       const codeLines: string[] = [];
       i++;
-      while (i < lines.length && !lines[i].startsWith('```')) {
+      
+      let codeSafetyCounter = 0;
+      const maxCodeLines = 1000; // 코드 블록 최대 라인 수
+      
+      while (i < lines.length && !lines[i].startsWith('```') && codeSafetyCounter < maxCodeLines) {
+        codeSafetyCounter++;
         codeLines.push(lines[i]);
         i++;
       }
+      
+      if (codeSafetyCounter >= maxCodeLines) {
+        console.warn('Code block exceeded maximum lines');
+      }
+      
       elements.push({
         type: 'code',
         content: codeLines.join('\n'),
         language
       });
-      i++;
+      
+      // 종료 ``` 스킵
+      if (i < lines.length && lines[i].startsWith('```')) {
+        i++;
+      }
       continue;
     }
 
@@ -135,8 +162,20 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     // 순서 있는 목록
     if (line.match(/^\d+\.\s/)) {
       const listItems: string[] = [];
-      while (i < lines.length && lines[i].match(/^\d+\.\s/)) {
-        listItems.push(stripHtmlTags(lines[i].replace(/^\d+\.\s+/, '')));
+      while (i < lines.length && (lines[i].match(/^\d+\.\s/) || lines[i].match(/^\s{2,}/))) {
+        if (lines[i].match(/^\d+\.\s/)) {
+          // 새로운 목록 항목
+          const item = lines[i].replace(/^\d+\.\s+/, '');
+          listItems.push(stripHtmlTags(item));
+        } else if (lines[i].match(/^\s{2,}/) && listItems.length > 0) {
+          // 이전 항목의 연속 (들여쓰기된 내용)
+          const continuation = lines[i].trim();
+          if (continuation) {
+            listItems[listItems.length - 1] += ' ' + stripHtmlTags(continuation);
+          }
+        } else {
+          break;
+        }
         i++;
       }
       elements.push({
@@ -150,10 +189,20 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     // 순서 없는 목록
     if (line.match(/^[-*+]\s/)) {
       const listItems: string[] = [];
-      while (i < lines.length && lines[i].match(/^[-*+]\s/)) {
-        // 들여쓰기된 목록 항목도 처리
-        const item = lines[i].replace(/^\s*[-*+]\s+/, '');
-        listItems.push(stripHtmlTags(item));
+      while (i < lines.length && (lines[i].match(/^[-*+]\s/) || lines[i].match(/^\s{2,}/))) {
+        if (lines[i].match(/^[-*+]\s/)) {
+          // 새로운 목록 항목
+          const item = lines[i].replace(/^\s*[-*+]\s+/, '');
+          listItems.push(stripHtmlTags(item));
+        } else if (lines[i].match(/^\s{2,}/) && listItems.length > 0) {
+          // 이전 항목의 연속 (들여쓰기된 내용)
+          const continuation = lines[i].trim();
+          if (continuation) {
+            listItems[listItems.length - 1] += ' ' + stripHtmlTags(continuation);
+          }
+        } else {
+          break;
+        }
         i++;
       }
       elements.push({
@@ -230,6 +279,11 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     i++;
   }
 
+  if (safetyCounter >= maxLines) {
+    console.warn('parseMarkdown hit safety limit');
+  }
+  
+  console.log('parseMarkdown completed with elements:', elements.length);
   return elements;
 }
 
@@ -318,11 +372,15 @@ function processInlineMarkdown(text: string): TextRun[] {
 export async function markdownToDocx(markdown: string): Promise<void> {
   console.log('markdownToDocx started, input length:', markdown.length);
   
-  // 긴 텍스트 처리를 위한 청크 처리
-  const processInChunks = async () => {
+  try {
+    console.log('Starting parseMarkdown...');
     const elements = parseMarkdown(markdown);
-    console.log('Parsed elements count:', elements.length);
-    const children: (Paragraph | Table)[] = [];
+    console.log('parseMarkdown completed, elements count:', elements.length);
+    
+    // 긴 텍스트 처리를 위한 청크 처리
+    const processInChunks = async () => {
+      const children: (Paragraph | Table)[] = [];
+      console.log('Starting element processing...');
 
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -488,12 +546,13 @@ export async function markdownToDocx(markdown: string): Promise<void> {
     }
   }
 
-  return children;
-  };
+    return children;
+    };
 
-  // 문서 생성
-  const children = await processInChunks();
-  console.log('Document children created, count:', children.length);
+    // 문서 생성
+    console.log('Calling processInChunks...');
+    const children = await processInChunks();
+    console.log('Document children created, count:', children.length);
   const doc = new Document({
     numbering: {
       config: [
@@ -586,8 +645,7 @@ export async function markdownToDocx(markdown: string): Promise<void> {
     }
   });
 
-  // 파일 저장
-  try {
+    // 파일 저장
     console.log('Packing document to blob...');
     const blob = await Packer.toBlob(doc);
     console.log('Blob created, size:', blob.size);
@@ -596,7 +654,7 @@ export async function markdownToDocx(markdown: string): Promise<void> {
     saveAs(blob, 'document.docx');
     console.log('File save initiated');
   } catch (error) {
-    console.error('Error during file save:', error);
+    console.error('Error in markdownToDocx:', error);
     throw error;
   }
 }
