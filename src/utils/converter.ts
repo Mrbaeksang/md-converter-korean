@@ -11,7 +11,7 @@ const loadHtml2Pdf = () => {
 };
 
 // Type definitions
-export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'excel' | 'txt';
+export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'ppt' | 'excel' | 'txt';
 
 // Custom renderer for links to open in new tab
 const renderer = new marked.Renderer();
@@ -431,6 +431,24 @@ export async function exportDocx(markdown: string): Promise<void> {
     }
 }
 
+// PPT Export
+export async function exportPpt(markdown: string): Promise<void> {
+    try {
+        console.log('Starting PPT export...');
+        console.log('Importing pptExporter module...');
+        const { markdownToPpt } = await import('./pptExporter');
+        console.log('pptExporter module loaded successfully');
+        console.log('Calling markdownToPpt function...');
+        await markdownToPpt(markdown);
+        console.log('PPT export completed successfully');
+    } catch (error) {
+        console.error('PPT export error details:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        alert('PPT 내보내기 중 오류가 발생했습니다. 다른 형식을 시도해주세요.');
+        throw error;
+    }
+}
+
 // Export function
 export async function exportAs(format: ExportFormat, markdown: string): Promise<void> {
     console.log(`exportAs called with format: ${format}`);
@@ -459,6 +477,10 @@ export async function exportAs(format: ExportFormat, markdown: string): Promise<
             case 'docx':
                 console.log('Exporting as DOCX...');
                 await exportDocx(markdown);
+                break;
+            case 'ppt':
+                console.log('Exporting as PPT...');
+                await exportPpt(markdown);
                 break;
             case 'excel':
                 console.log('Exporting as Excel...');

@@ -120,6 +120,7 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
 | **Styled HTML** | 🎨 | 완성된 웹문서 | CSS 스타일 포함 | document_styled.html |
 | **PDF** | 📑 | 인쇄/공유용 | A4, 한글폰트 지원<br>⏳ 생성시간 소요 | document.pdf |
 | **DOCX** | 📝 | MS Word 편집 | Word로 편집 가능<br>표/목록 자동 변환 | document.docx |
+| **PPT** | 🎯 | 프레젠테이션 | 발표 자료 자동 생성<br>제목별로 슬라이드 분리 | presentation.pptx |
 | **엑셀** | 📊 | 표 데이터 추출 | 표만 추출<br>각 표는 별도 시트 | document.xlsx |
 | **TXT** | 📋 | 순수 텍스트 | 서식 없는 일반 텍스트 | document.txt |
 
@@ -358,6 +359,10 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
             <button className="sidebar-item" onClick={() => handleExport('docx')} disabled={isExporting}>
               <span className="material-symbols-outlined">article</span>
               DOCX
+            </button>
+            <button className="sidebar-item" onClick={() => handleExport('ppt')} disabled={isExporting}>
+              <span className="material-symbols-outlined">slideshow</span>
+              PPT
             </button>
             <button className="sidebar-item" onClick={() => handleExport('excel')} disabled={isExporting}>
               <span className="material-symbols-outlined">table_view</span>
