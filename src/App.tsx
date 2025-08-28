@@ -158,7 +158,7 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
 <div style="display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; align-items: center;">
   <!-- 모바일: 카카오페이 링크 버튼 -->
   <a href="https://qr.kakaopay.com/2810060110000071236650569c404083" target="_blank" rel="noopener noreferrer" class="mobile-only" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #FEE500 0%, #FFEB00 100%); border-radius: 8px; text-decoration: none; color: #3C1E1E; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    💛 카카오페이로 커피사주기
+    💛 카카오페이로 커피 후원하기
   </a>
   
   <!-- PC: 카카오페이 QR -->
