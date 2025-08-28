@@ -237,50 +237,25 @@ function parseMarkdown(markdown: string): ParsedElement[] {
 function processInlineMarkdown(text: string): TextRun[] {
   const runs: TextRun[] = [];
   let remaining = text;
+  const maxIterations = 1000; // 무한 루프 방지
+  let iterations = 0;
   
   // 이모지 제거 (선택사항 - 원하면 유지 가능)
   // remaining = remaining.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu, '');
   
-  while (remaining.length > 0) {
-    // 굵게
-    const boldMatch = remaining.match(/\*\*(.*?)\*\*/);
-    if (boldMatch) {
-      const index = boldMatch.index!;
+  while (remaining.length > 0 && iterations < maxIterations) {
+    iterations++;
+    let matched = false;
+    
+    // 코드 먼저 처리 (백틱이 다른 패턴과 충돌하지 않도록)
+    const codeMatch = remaining.match(/`([^`]*?)`/);
+    if (codeMatch && codeMatch.index !== undefined) {
+      const index = codeMatch.index;
       if (index > 0) {
         runs.push(new TextRun(remaining.slice(0, index)));
       }
       runs.push(new TextRun({
-        text: boldMatch[1],
-        bold: true
-      }));
-      remaining = remaining.slice(index + boldMatch[0].length);
-      continue;
-    }
-
-    // 기울임
-    const italicMatch = remaining.match(/\*(.*?)\*/);
-    if (italicMatch) {
-      const index = italicMatch.index!;
-      if (index > 0) {
-        runs.push(new TextRun(remaining.slice(0, index)));
-      }
-      runs.push(new TextRun({
-        text: italicMatch[1],
-        italics: true
-      }));
-      remaining = remaining.slice(index + italicMatch[0].length);
-      continue;
-    }
-
-    // 코드
-    const codeMatch = remaining.match(/`(.*?)`/);
-    if (codeMatch) {
-      const index = codeMatch.index!;
-      if (index > 0) {
-        runs.push(new TextRun(remaining.slice(0, index)));
-      }
-      runs.push(new TextRun({
-        text: codeMatch[1],
+        text: codeMatch[1] || '',
         font: 'Courier New',
         shading: {
           type: 'clear',
@@ -288,23 +263,74 @@ function processInlineMarkdown(text: string): TextRun[] {
         }
       }));
       remaining = remaining.slice(index + codeMatch[0].length);
-      continue;
+      matched = true;
     }
-
-    // 나머지 텍스트
+    // 굵게
+    else if (!matched) {
+      const boldMatch = remaining.match(/\*\*([^*]+?)\*\*/);
+      if (boldMatch && boldMatch.index !== undefined) {
+        const index = boldMatch.index;
+        if (index > 0) {
+          runs.push(new TextRun(remaining.slice(0, index)));
+        }
+        runs.push(new TextRun({
+          text: boldMatch[1] || '',
+          bold: true
+        }));
+        remaining = remaining.slice(index + boldMatch[0].length);
+        matched = true;
+      }
+    }
+    // 기울임 (굵게 처리 후 확인)
+    if (!matched) {
+      const italicMatch = remaining.match(/\*([^*]+?)\*/);
+      if (italicMatch && italicMatch.index !== undefined) {
+        const index = italicMatch.index;
+        if (index > 0) {
+          runs.push(new TextRun(remaining.slice(0, index)));
+        }
+        runs.push(new TextRun({
+          text: italicMatch[1] || '',
+          italics: true
+        }));
+        remaining = remaining.slice(index + italicMatch[0].length);
+        matched = true;
+      }
+    }
+    
+    // 매칭되는 패턴이 없으면 나머지 텍스트 처리하고 종료
+    if (!matched) {
+      runs.push(new TextRun(remaining));
+      break;
+    }
+  }
+  
+  // 무한 루프 방지를 위해 남은 텍스트가 있으면 그대로 추가
+  if (iterations >= maxIterations && remaining.length > 0) {
+    console.warn('Max iterations reached in processInlineMarkdown, adding remaining text as-is');
     runs.push(new TextRun(remaining));
-    break;
   }
 
-  return runs.length > 0 ? runs : [new TextRun(text)];
+  return runs.length > 0 ? runs : [new TextRun(text || '')];
 }
 
 // DOCX 문서 생성
 export async function markdownToDocx(markdown: string): Promise<void> {
-  const elements = parseMarkdown(markdown);
-  const children: (Paragraph | Table)[] = [];
+  console.log('markdownToDocx started, input length:', markdown.length);
+  
+  // 긴 텍스트 처리를 위한 청크 처리
+  const processInChunks = async () => {
+    const elements = parseMarkdown(markdown);
+    console.log('Parsed elements count:', elements.length);
+    const children: (Paragraph | Table)[] = [];
 
-  for (const element of elements) {
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      
+      // 주기적으로 브라우저가 응답할 수 있도록 함
+      if (i % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     switch (element.type) {
       case 'heading': {
         const headingLevel = element.level === 1 ? HeadingLevel.HEADING_1 :
@@ -462,7 +488,12 @@ export async function markdownToDocx(markdown: string): Promise<void> {
     }
   }
 
+  return children;
+  };
+
   // 문서 생성
+  const children = await processInChunks();
+  console.log('Document children created, count:', children.length);
   const doc = new Document({
     numbering: {
       config: [
@@ -556,6 +587,16 @@ export async function markdownToDocx(markdown: string): Promise<void> {
   });
 
   // 파일 저장
-  const blob = await Packer.toBlob(doc);
-  saveAs(blob, 'document.docx');
+  try {
+    console.log('Packing document to blob...');
+    const blob = await Packer.toBlob(doc);
+    console.log('Blob created, size:', blob.size);
+    
+    console.log('Saving file...');
+    saveAs(blob, 'document.docx');
+    console.log('File save initiated');
+  } catch (error) {
+    console.error('Error during file save:', error);
+    throw error;
+  }
 }
