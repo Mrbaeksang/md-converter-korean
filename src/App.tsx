@@ -99,6 +99,8 @@ function App() {
   const showGuide = () => {
     const guideContent = `# 📝 MD 변환기 by Mrbaeksang(devcom.kr)
 
+> 💡 **사용법을 까먹으셨나요?** 언제든지 상단의 **설명서** 버튼을 다시 누르면 이 화면을 볼 수 있습니다!
+
 ## 🎯 완벽 사용 가이드 보기!
 **사진과 함께 자세한 사용법을 확인하세요!**
 👉 [**📸 스크린샷과 함께 사용법 보기 →**](https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj)
@@ -208,6 +210,15 @@ AI에 익숙하지 않은 사용자도 쉽게 문서를 편집하고 다양한 �
 *💡 작업을 시작하려면:*
 - **PC**: 상단의 **'새 문서'** 버튼을 클릭하세요
 - **모바일**: 우측 상단 **⋮** 메뉴를 누르고 **'새 문서'**를 선택하세요
+
+---
+
+## 💜 이용 후 만족하셨나요?
+소중한 지인들에게 이 사이트를 공유해주세요!
+
+<button onclick="navigator.clipboard.writeText('https://md-converter-korean.vercel.app/').then(() => alert('사이트 주소가 복사되었습니다! 지인들에게 공유해주세요 😊')).catch(() => alert('복사에 실패했습니다. 주소: https://md-converter-korean.vercel.app/'))" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  📤 사이트 주소 복사하기
+</button>
 
 ---
 
