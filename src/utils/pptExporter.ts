@@ -615,7 +615,7 @@ export async function markdownToPpt(markdown: string): Promise<void> {
     }
     
     else if (slideContent.type === 'list') {
-      // 리스트 슬라이드
+      // 리스트 슬라이드 - 오버플로우 처리
       if (slideContent.title) {
         slide.addText(slideContent.title, {
           x: 0.5,
@@ -630,24 +630,159 @@ export async function markdownToPpt(markdown: string): Promise<void> {
         });
       }
       
-      // 불릿 포인트 생성
-      const bullets = slideContent.content.map(item => ({
-        text: item,
-        options: { bullet: true, indentLevel: 0 }
-      }));
+      const yStart = slideContent.title ? 1.3 : 0.5;
+      const availableHeight = 5.625 - yStart - 0.3;
+      const fontSize = 16;
+      const lineSpacing = 32;
       
-      slide.addText(bullets, {
-        x: 0.8,
-        y: 1.3,
-        w: 8.4,
-        h: 3.8,
-        fontSize: 16,
-        fontFace: '맑은 고딕',
-        color: '444444',
-        bullet: { type: 'bullet' },
-        lineSpacing: 32,
-        valign: 'top'
-      });
+      // 한 슬라이드에 들어갈 수 있는 리스트 아이템 수 계산
+      const maxItemsPerSlide = Math.floor((availableHeight * 72) / lineSpacing);
+      
+      const items = slideContent.content;
+      
+      // 각 아이템의 추정 줄 수 계산
+      const estimatedLines = items.reduce((total, item) => {
+        // 한글 기준 한 줄에 약 35-40자
+        const wrappedLines = Math.ceil(item.length / 35);
+        return total + wrappedLines;
+      }, 0);
+      
+      // 오버플로우가 발생하면 여러 슬라이드로 분할
+      if (estimatedLines > maxItemsPerSlide || items.length > maxItemsPerSlide) {
+        let currentItems: string[] = [];
+        let currentLineCount = 0;
+        let slideIndex = 0;
+        const allSlides: Array<{ title: string; items: string[] }> = [];
+        
+        for (const item of items) {
+          const wrappedLines = Math.ceil(item.length / 35);
+          
+          // 현재 아이템을 추가했을 때 초과하는지 확인
+          if ((currentLineCount + wrappedLines > maxItemsPerSlide || currentItems.length >= maxItemsPerSlide) && currentItems.length > 0) {
+            // 현재까지의 내용으로 슬라이드 생성
+            if (slideIndex === 0) {
+              // 첫 번째 슬라이드는 이미 생성됨
+              const bullets = currentItems.map(item => ({
+                text: item,
+                options: { bullet: true, indentLevel: 0 }
+              }));
+              
+              slide.addText(bullets, {
+                x: 0.8,
+                y: yStart,
+                w: 8.4,
+                h: availableHeight,
+                fontSize: fontSize,
+                fontFace: '맑은 고딕',
+                color: '444444',
+                bullet: { type: 'bullet' },
+                lineSpacing: lineSpacing,
+                valign: 'top'
+              });
+            } else {
+              // 추가 슬라이드 생성을 위해 저장
+              allSlides.push({
+                title: `${slideContent.title} (계속 ${slideIndex + 1})`,
+                items: [...currentItems]
+              });
+            }
+            
+            currentItems = [];
+            currentLineCount = 0;
+            slideIndex++;
+          }
+          
+          currentItems.push(item);
+          currentLineCount += wrappedLines;
+        }
+        
+        // 남은 아이템 처리
+        if (currentItems.length > 0) {
+          if (slideIndex === 0) {
+            // 첫 번째 슬라이드에 모든 내용이 들어감
+            const bullets = currentItems.map(item => ({
+              text: item,
+              options: { bullet: true, indentLevel: 0 }
+            }));
+            
+            slide.addText(bullets, {
+              x: 0.8,
+              y: yStart,
+              w: 8.4,
+              h: availableHeight,
+              fontSize: fontSize,
+              fontFace: '맑은 고딕',
+              color: '444444',
+              bullet: { type: 'bullet' },
+              lineSpacing: lineSpacing,
+              valign: 'top'
+            });
+          } else {
+            // 추가 슬라이드 필요
+            allSlides.push({
+              title: `${slideContent.title} (계속 ${slideIndex + 1})`,
+              items: [...currentItems]
+            });
+          }
+        }
+        
+        // 추가 슬라이드 생성
+        for (const additionalSlide of allSlides) {
+          const newSlide = pres.addSlide();
+          newSlide.background = { color: 'FFFFFF' };
+          
+          // 제목 추가
+          newSlide.addText(additionalSlide.title, {
+            x: 0.5,
+            y: 0.3,
+            w: 9,
+            h: 0.7,
+            fontSize: 28,
+            fontFace: '맑은 고딕',
+            color: '333333',
+            bold: true,
+            valign: 'middle'
+          });
+          
+          // 리스트 아이템 추가
+          const bullets = additionalSlide.items.map((item: string) => ({
+            text: item,
+            options: { bullet: true, indentLevel: 0 }
+          }));
+          
+          newSlide.addText(bullets, {
+            x: 0.8,
+            y: 1.3,
+            w: 8.4,
+            h: 3.8,
+            fontSize: fontSize,
+            fontFace: '맑은 고딕',
+            color: '444444',
+            bullet: { type: 'bullet' },
+            lineSpacing: lineSpacing,
+            valign: 'top'
+          });
+        }
+      } else {
+        // 오버플로우 없음 - 기존처럼 처리
+        const bullets = slideContent.content.map(item => ({
+          text: item,
+          options: { bullet: true, indentLevel: 0 }
+        }));
+        
+        slide.addText(bullets, {
+          x: 0.8,
+          y: yStart,
+          w: 8.4,
+          h: availableHeight,
+          fontSize: fontSize,
+          fontFace: '맑은 고딕',
+          color: '444444',
+          bullet: { type: 'bullet' },
+          lineSpacing: lineSpacing,
+          valign: 'top'
+        });
+      }
     }
     
     else if (slideContent.type === 'code') {
@@ -682,7 +817,7 @@ export async function markdownToPpt(markdown: string): Promise<void> {
     }
     
     else {
-      // 일반 콘텐츠 슬라이드
+      // 일반 콘텐츠 슬라이드 - 텍스트 오버플로우 처리
       if (slideContent.title) {
         slide.addText(slideContent.title, {
           x: 0.5,
@@ -698,21 +833,146 @@ export async function markdownToPpt(markdown: string): Promise<void> {
       }
       
       const yStart = slideContent.title ? 1.2 : 0.5;
-      const content = slideContent.content.join('\n\n');
+      const availableHeight = 5.625 - yStart - 0.3;
+      const fontSize = 16;
+      const lineSpacing = 24;
       
-      if (content) {
-        slide.addText(content, {
-          x: 0.5,
-          y: yStart,
-          w: 9,
-          h: 5.625 - yStart - 0.3,
-          fontSize: 16,
-          fontFace: '맑은 고딕',
-          color: '444444',
-          lineSpacing: 24,
-          valign: 'top',
-          wrap: true
-        });
+      // 한 슬라이드에 들어갈 수 있는 대략적인 줄 수 계산
+      // 한글 16pt 폰트 + 24pt 간격으로 계산
+      const maxLinesPerSlide = Math.floor((availableHeight * 72) / lineSpacing); // 인치를 포인트로 변환
+      
+      // 콘텐츠를 줄 단위로 분할
+      const lines = slideContent.content;
+      
+      // 텍스트가 슬라이드 높이를 초과하는지 확인
+      const estimatedLines = lines.reduce((total, line) => {
+        // 긴 줄은 자동 줄바꿈을 고려 (한글 기준 한 줄에 약 35-40자)
+        const wrappedLines = Math.ceil(line.length / 35);
+        return total + wrappedLines + 1; // 단락 간 빈 줄 추가
+      }, 0);
+      
+      // 오버플로우가 발생하면 여러 슬라이드로 분할
+      if (estimatedLines > maxLinesPerSlide) {
+        let currentLines: string[] = [];
+        let currentLineCount = 0;
+        let slideIndex = 0;
+        const allSlides: Array<{ title: string; content: string[] }> = [];
+        
+        for (const line of lines) {
+          const wrappedLines = Math.ceil(line.length / 35);
+          
+          // 현재 줄을 추가했을 때 초과하는지 확인
+          if (currentLineCount + wrappedLines + 1 > maxLinesPerSlide && currentLines.length > 0) {
+            // 현재까지의 내용으로 슬라이드 생성
+            if (slideIndex === 0) {
+              // 첫 번째 슬라이드는 이미 생성됨
+              const content = currentLines.join('\n\n');
+              slide.addText(content, {
+                x: 0.5,
+                y: yStart,
+                w: 9,
+                h: availableHeight,
+                fontSize: fontSize,
+                fontFace: '맑은 고딕',
+                color: '444444',
+                lineSpacing: lineSpacing,
+                valign: 'top',
+                wrap: true
+              });
+            } else {
+              // 추가 슬라이드 생성을 위해 저장
+              allSlides.push({
+                title: `${slideContent.title} (계속 ${slideIndex + 1})`,
+                content: [...currentLines]
+              });
+            }
+            
+            currentLines = [];
+            currentLineCount = 0;
+            slideIndex++;
+          }
+          
+          currentLines.push(line);
+          currentLineCount += wrappedLines + 1;
+        }
+        
+        // 남은 콘텐츠 처리
+        if (currentLines.length > 0) {
+          if (slideIndex === 0) {
+            // 첫 번째 슬라이드에 모든 내용이 들어감
+            const content = currentLines.join('\n\n');
+            slide.addText(content, {
+              x: 0.5,
+              y: yStart,
+              w: 9,
+              h: availableHeight,
+              fontSize: fontSize,
+              fontFace: '맑은 고딕',
+              color: '444444',
+              lineSpacing: lineSpacing,
+              valign: 'top',
+              wrap: true
+            });
+          } else {
+            // 추가 슬라이드 필요
+            allSlides.push({
+              title: `${slideContent.title} (계속 ${slideIndex + 1})`,
+              content: [...currentLines]
+            });
+          }
+        }
+        
+        // 추가 슬라이드 생성
+        for (const additionalSlide of allSlides) {
+          const newSlide = pres.addSlide();
+          newSlide.background = { color: 'FFFFFF' };
+          
+          // 제목 추가
+          newSlide.addText(additionalSlide.title, {
+            x: 0.5,
+            y: 0.3,
+            w: 9,
+            h: 0.7,
+            fontSize: 28,
+            fontFace: '맑은 고딕',
+            color: '333333',
+            bold: true,
+            valign: 'middle'
+          });
+          
+          // 내용 추가
+          const content = additionalSlide.content.join('\n\n');
+          newSlide.addText(content, {
+            x: 0.5,
+            y: 1.2,
+            w: 9,
+            h: 4.125,
+            fontSize: fontSize,
+            fontFace: '맑은 고딕',
+            color: '444444',
+            lineSpacing: lineSpacing,
+            valign: 'top',
+            wrap: true
+          });
+        }
+      } else {
+        // 오버플로우 없음 - 기존처럼 처리
+        const content = slideContent.content.join('\n\n');
+        
+        if (content) {
+          slide.addText(content, {
+            x: 0.5,
+            y: yStart,
+            w: 9,
+            h: availableHeight,
+            fontSize: fontSize,
+            fontFace: '맑은 고딕',
+            color: '444444',
+            lineSpacing: lineSpacing,
+            valign: 'top',
+            wrap: true
+          });
+        }
       }
     }
     
