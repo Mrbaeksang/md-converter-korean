@@ -373,12 +373,13 @@ function parseMarkdownToSlides(markdown: string): SlideContent[] {
     else if (trimmedLine.includes('@media') || trimmedLine.includes('@keyframes') || trimmedLine.includes('@font-face')) {
       // CSS 블록 끝까지 건너뛰기 (중첩된 중괄호 처리)
       let braceCount = 0;
+      let currentLine = trimmedLine;
       do {
-        braceCount += (trimmedLine.match(/{/g) || []).length;
-        braceCount -= (trimmedLine.match(/}/g) || []).length;
+        braceCount += (currentLine.match(/{/g) || []).length;
+        braceCount -= (currentLine.match(/}/g) || []).length;
         if (braceCount > 0 && i < lines.length - 1) {
           i++;
-          trimmedLine = lines[i].trim();
+          currentLine = lines[i].trim();
         }
       } while (braceCount > 0 && i < lines.length - 1);
     }

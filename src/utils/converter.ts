@@ -169,34 +169,178 @@ export async function exportPdf(markdown: string): Promise<void> {
             (h2 as HTMLElement).style.marginBottom = '18px';
         });
         
-        // table 스타일 - 오버플로우 방지 및 페이지 분할 방지
+        // 표 처리 - 페이지 경계에서 잘리지 않도록 처리
+        const MAX_ROWS_PER_PAGE = 20; // A4 한 페이지에 들어갈 수 있는 최대 데이터 행 수
+        
+        // 먼저 모든 표에 기본 스타일과 페이지 분할 방지 적용
         container.querySelectorAll('table').forEach(table => {
             (table as HTMLElement).style.borderCollapse = 'collapse';
             (table as HTMLElement).style.width = '100%';
             (table as HTMLElement).style.margin = '15px 0';
-            (table as HTMLElement).style.tableLayout = 'fixed'; // 테이블 레이아웃 고정
-            (table as HTMLElement).style.wordBreak = 'break-word'; // 긴 텍스트 줄바꿈
-            (table as HTMLElement).style.pageBreakInside = 'avoid'; // 테이블이 페이지 중간에서 잘리지 않도록
-            (table as HTMLElement).style.breakInside = 'avoid';
+            (table as HTMLElement).style.tableLayout = 'fixed';
+            (table as HTMLElement).style.wordBreak = 'break-word';
+            
+            // 작은 테이블은 페이지를 넘어가지 않도록 설정
+            const rows = table.querySelectorAll('tr');
+            if (rows.length <= 10) {
+                // 10행 이하의 작은 표는 통째로 다음 페이지로
+                (table as HTMLElement).style.pageBreakInside = 'avoid';
+                (table as HTMLElement).style.breakInside = 'avoid';
+                (table as HTMLElement).style.pageBreakBefore = 'auto';
+                (table as HTMLElement).style.display = 'table';
+                
+                // 표 전체를 감싸는 컨테이너 생성
+                const tableWrapper = document.createElement('div');
+                tableWrapper.style.pageBreakInside = 'avoid';
+                tableWrapper.style.breakInside = 'avoid';
+                tableWrapper.style.marginBottom = '20px';
+                
+                // 표를 wrapper로 감싸기
+                const parent = table.parentElement;
+                if (parent) {
+                    parent.insertBefore(tableWrapper, table);
+                    tableWrapper.appendChild(table);
+                }
+            }
+            
+            // 셀 스타일
+            table.querySelectorAll('th, td').forEach(cell => {
+                (cell as HTMLElement).style.border = '1px solid black';
+                (cell as HTMLElement).style.padding = '8px';
+                (cell as HTMLElement).style.wordBreak = 'break-word';
+                (cell as HTMLElement).style.overflowWrap = 'break-word';
+            });
+            
+            // 헤더 스타일
+            table.querySelectorAll('th').forEach(th => {
+                (th as HTMLElement).style.background = '#f0f0f0';
+                (th as HTMLElement).style.fontWeight = 'bold';
+            });
         });
         
-        container.querySelectorAll('th, td').forEach(cell => {
-            (cell as HTMLElement).style.border = '1px solid black';
-            (cell as HTMLElement).style.padding = '8px';
-            (cell as HTMLElement).style.wordBreak = 'break-word'; // 셀 내용 줄바꿈
-            (cell as HTMLElement).style.overflowWrap = 'break-word';
+        // 긴 표 분할 처리
+        container.querySelectorAll('table').forEach((table, tableIndex) => {
+            const rows = Array.from(table.querySelectorAll('tr'));
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            
+            let headerRow: Element | null = null;
+            let dataRows: Element[] = [];
+            
+            if (thead) {
+                headerRow = thead.querySelector('tr');
+                dataRows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+            } else {
+                // thead가 없는 경우 첫 번째 행을 헤더로 간주
+                if (rows.length > 0) {
+                    const firstRow = rows[0];
+                    const firstCells = firstRow.querySelectorAll('th');
+                    if (firstCells.length > 0) {
+                        headerRow = firstRow;
+                        dataRows = rows.slice(1);
+                    } else {
+                        dataRows = rows;
+                    }
+                }
+            }
+            
+            // 테이블이 너무 길면 분할 (10행 초과인 경우만)
+            if (dataRows.length > MAX_ROWS_PER_PAGE && rows.length > 10) {
+                console.log(`테이블 ${tableIndex + 1} 분할 필요: ${dataRows.length}개 행`);
+                
+                const tableParent = table.parentElement;
+                if (!tableParent) return;
+                
+                // 테이블 캡션이 있으면 저장
+                const caption = table.querySelector('caption');
+                const captionText = caption ? caption.textContent || '' : '';
+                
+                // 분할된 테이블들을 저장할 배열
+                const splitTables: HTMLTableElement[] = [];
+                let currentPartRows: Element[] = [];
+                let partNumber = 1;
+                
+                // 데이터 행을 MAX_ROWS_PER_PAGE씩 분할
+                for (let i = 0; i < dataRows.length; i += MAX_ROWS_PER_PAGE) {
+                    const partRows = dataRows.slice(i, Math.min(i + MAX_ROWS_PER_PAGE, dataRows.length));
+                    
+                    // 새 테이블 생성
+                    const newTable = document.createElement('table');
+                    newTable.className = table.className;
+                    
+                    // 스타일 적용
+                    (newTable as HTMLElement).style.borderCollapse = 'collapse';
+                    (newTable as HTMLElement).style.width = '100%';
+                    (newTable as HTMLElement).style.margin = '15px 0';
+                    (newTable as HTMLElement).style.tableLayout = 'fixed';
+                    (newTable as HTMLElement).style.wordBreak = 'break-word';
+                    
+                    // 분할된 테이블 사이에 페이지 구분
+                    if (partNumber > 1) {
+                        (newTable as HTMLElement).style.pageBreakBefore = 'always';
+                        (newTable as HTMLElement).style.marginTop = '30px';
+                    }
+                    
+                    // 캡션 추가 (파트 번호 포함)
+                    if (captionText) {
+                        const newCaption = document.createElement('caption');
+                        newCaption.textContent = dataRows.length > MAX_ROWS_PER_PAGE 
+                            ? `${captionText} (${partNumber}/${Math.ceil(dataRows.length / MAX_ROWS_PER_PAGE)})`
+                            : captionText;
+                        newCaption.style.marginBottom = '10px';
+                        newCaption.style.fontWeight = 'bold';
+                        newCaption.style.fontSize = '1.1em';
+                        newTable.appendChild(newCaption);
+                    }
+                    
+                    // 헤더 복제
+                    if (headerRow) {
+                        const newThead = document.createElement('thead');
+                        const headerClone = headerRow.cloneNode(true) as HTMLElement;
+                        newThead.appendChild(headerClone);
+                        newTable.appendChild(newThead);
+                    }
+                    
+                    // 바디 생성
+                    const newTbody = document.createElement('tbody');
+                    partRows.forEach(row => {
+                        const rowClone = row.cloneNode(true) as HTMLElement;
+                        newTbody.appendChild(rowClone);
+                    });
+                    newTable.appendChild(newTbody);
+                    
+                    splitTables.push(newTable);
+                    partNumber++;
+                }
+                
+                // 원본 테이블을 첫 번째 분할 테이블로 교체
+                if (splitTables.length > 0) {
+                    tableParent.replaceChild(splitTables[0], table);
+                    
+                    // 나머지 분할 테이블들을 순서대로 추가
+                    let previousTable = splitTables[0];
+                    for (let i = 1; i < splitTables.length; i++) {
+                        if (previousTable.nextSibling) {
+                            tableParent.insertBefore(splitTables[i], previousTable.nextSibling);
+                        } else {
+                            tableParent.appendChild(splitTables[i]);
+                        }
+                        previousTable = splitTables[i];
+                    }
+                    
+                    // 분할된 모든 테이블에 스타일 적용
+                    splitTables.forEach(splitTable => {
+                        applyTableStyles(splitTable);
+                    });
+                }
+            }
         });
         
-        container.querySelectorAll('th').forEach(th => {
-            (th as HTMLElement).style.background = '#f0f0f0';
-            (th as HTMLElement).style.fontWeight = 'bold';
-        });
-        
-        // 테이블 행 페이지 분할 방지
-        container.querySelectorAll('tr').forEach(row => {
-            (row as HTMLElement).style.pageBreakInside = 'avoid';
-            (row as HTMLElement).style.breakInside = 'avoid';
-        });
+        // 테이블 스타일 적용 함수 (분할된 테이블용)
+        function applyTableStyles(table: Element) {
+            // 기본 스타일은 이미 위에서 적용했으므로 추가 스타일만
+            (table as HTMLElement).style.pageBreakInside = 'auto';
+        }
         
         // 코드 블록 스타일 + 페이지 잘림 방지
         container.querySelectorAll('pre, code').forEach(codeBlock => {
