@@ -68,6 +68,11 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     safetyCounter++;
     let line = lines[i];
     
+    // 디버그 - 파싱 중인 라인 확인
+    if (i % 10 === 0) {
+      console.log(`Processing line ${i}/${lines.length}`);
+    }
+    
     // HTML 블록 건너뛰기 (button, div, style 등)
     if (line.trim().startsWith('<button') || line.trim().startsWith('<div') || line.trim().startsWith('<style')) {
       let depth = 1;
@@ -199,10 +204,10 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     }
 
     // 순서 없는 목록
-    if (line.match(/^[-*+]\s/)) {
+    if (line.match(/^\s*[-*+]\s/)) {
       const listItems: string[] = [];
-      while (i < lines.length && (lines[i].match(/^[-*+]\s/) || lines[i].match(/^\s{2,}/))) {
-        if (lines[i].match(/^[-*+]\s/)) {
+      while (i < lines.length && (lines[i].match(/^\s*[-*+]\s/) || lines[i].match(/^\s{2,}/))) {
+        if (lines[i].match(/^\s*[-*+]\s/)) {
           // 새로운 목록 항목
           const item = lines[i].replace(/^\s*[-*+]\s+/, '');
           listItems.push(stripHtmlTags(item));
@@ -270,7 +275,7 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       const paragraphLines: string[] = [line];
       i++;
       while (i < lines.length && lines[i].trim() && 
-             !lines[i].match(/^(#{1,6}|\d+\.|\s*[-*+]\s|>|```|\||---)/)) {
+             !lines[i].match(/^(#{1,6}|\d+\.|\s*[-*+]\s|>|```|\||---|~~~)/)) {
         // HTML 태그가 있으면 건너뛰기
         if (lines[i].trim().startsWith('<')) {
           break;
@@ -296,6 +301,7 @@ function parseMarkdown(markdown: string): ParsedElement[] {
   }
   
   console.log('parseMarkdown completed with elements:', elements.length);
+  console.log('Elements:', elements.map(e => ({ type: e.type, content: e.content?.substring(0, 50) })));
   return elements;
 }
 
