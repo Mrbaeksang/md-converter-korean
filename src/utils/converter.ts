@@ -16,8 +16,10 @@ export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'excel' | '
 
 // Custom renderer for links to open in new tab
 const renderer = new marked.Renderer();
-renderer.link = function(href: string | null, title: string | null, text: string): string {
+renderer.link = function({ href, title, tokens }): string {
     const link = href || '';
+    // tokens 배열에서 텍스트 추출
+    const text = this.parser?.parseInline(tokens) || '';
     const titleAttr = title ? `title="${title}"` : '';
     return `<a href="${link}" target="_blank" rel="noopener noreferrer" ${titleAttr}>${text}</a>`;
 };
