@@ -14,12 +14,19 @@ const loadHtml2Pdf = () => {
 // Type definitions
 export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'excel' | 'txt';
 
+// Custom renderer for links to open in new tab
+const renderer = new marked.Renderer();
+renderer.link = (href, title, text) => {
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${title ? `title="${title}"` : ''}>${text}</a>`;
+};
+
 // marked.js 설정
 marked.setOptions({
     breaks: true,
     gfm: true,
     // @ts-expect-error - sanitize는 deprecated지만 아직 사용 가능
-    sanitize: false
+    sanitize: false,
+    renderer: renderer
 });
 
 // Markdown을 HTML로 변환
