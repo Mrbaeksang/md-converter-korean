@@ -284,19 +284,62 @@ export async function exportPdf(markdown: string): Promise<void> {
 
 // Text Export - Convert markdown to plain text
 export function exportTxt(markdown: string): void {
-    // 마크다운을 HTML로 변환
-    const html = markdownToHtml(markdown);
+    let plainText = markdown;
     
-    // 임시 div를 생성하여 HTML을 텍스트로 변환
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    // CSS 미디어 쿼리 및 스타일 블록 제거 (멀티라인 처리)
+    plainText = plainText.replace(/@media[\s\S]*?\{[\s\S]*?\}[\s]*\}/gm, '');
+    plainText = plainText.replace(/\.[\w-]+\s*\{[^}]*\}/gm, ''); // 클래스 스타일 제거
     
-    // 텍스트 콘텐츠 추출 (HTML 태그 제거)
-    let plainText = tempDiv.textContent || tempDiv.innerText || '';
+    // HTML 블록 제거 (style, script, button 등)
+    plainText = plainText.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    plainText = plainText.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    plainText = plainText.replace(/<button[^>]*onclick[^>]*>[\s\S]*?<\/button>/gi, '');
     
-    // 연속된 공백 정리
+    // 모든 HTML 태그 제거
+    plainText = plainText.replace(/<[^>]+>/g, '');
+    
+    // 마크다운 이미지 구문을 텍스트로 변환
+    plainText = plainText.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1');
+    
+    // 마크다운 링크를 텍스트로 변환
+    plainText = plainText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    
+    // 마크다운 강조 구문 제거
+    plainText = plainText.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold**
+    plainText = plainText.replace(/\*([^*]+)\*/g, '$1'); // *italic*
+    plainText = plainText.replace(/__([^_]+)__/g, '$1'); // __bold__
+    plainText = plainText.replace(/_([^_]+)_/g, '$1'); // _italic_
+    plainText = plainText.replace(/~~([^~]+)~~/g, '$1'); // ~~strikethrough~~
+    
+    // 마크다운 제목 마커 제거
+    plainText = plainText.replace(/^#{1,6}\s+/gm, '');
+    
+    // 블록쿼트 마커 제거
+    plainText = plainText.replace(/^>\s*/gm, '');
+    
+    // 인라인 코드 백틱 제거
+    plainText = plainText.replace(/`([^`]+)`/g, '$1');
+    
+    // 코드 블록 마커 제거
+    plainText = plainText.replace(/^```[^\n]*\n/gm, '');
+    plainText = plainText.replace(/^```$/gm, '');
+    
+    // 테이블 구분자 정리
+    plainText = plainText.replace(/^\|?[\s-|:]+\|?$/gm, '');
+    
+    // HTML 엔티티 디코딩
+    plainText = plainText
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+    
+    // 연속된 공백과 줄바꿈 정리
     plainText = plainText
         .replace(/\n{3,}/g, '\n\n') // 3개 이상의 줄바꿈을 2개로
+        .replace(/[ \t]+/g, ' ') // 연속된 공백을 하나로
         .replace(/[ ]{2,}/g, ' ')   // 연속된 공백을 하나로
         .trim();
     
