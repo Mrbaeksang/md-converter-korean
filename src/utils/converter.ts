@@ -4,7 +4,6 @@
 import { marked } from 'marked';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { markdownToDocx } from './docxExporter';
 
 // html2pdf를 동적으로 import
 const loadHtml2Pdf = () => {
@@ -414,9 +413,15 @@ export function exportExcel(markdown: string): void {
     });
 }
 
-// DOCX Export
+// DOCX Export - 동적으로 import
 export async function exportDocx(markdown: string): Promise<void> {
-    await markdownToDocx(markdown);
+    try {
+        const { markdownToDocx } = await import('./docxExporter');
+        await markdownToDocx(markdown);
+    } catch (error) {
+        console.error('DOCX export error:', error);
+        alert('DOCX 내보내기 중 오류가 발생했습니다. 다른 형식을 시도해주세요.');
+    }
 }
 
 // Export function

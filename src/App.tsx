@@ -78,6 +78,9 @@ function App() {
     setIsExporting(true);
     try {
       await exportAs(format as ExportFormat, markdown);
+    } catch (error) {
+      console.error(`Export error for ${format}:`, error);
+      alert(`${format.toUpperCase()} 내보내기 중 오류가 발생했습니다. 다른 형식을 시도해주세요.`);
     } finally {
       setIsExporting(false);
     }
