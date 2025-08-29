@@ -101,12 +101,12 @@ function App() {
 ## 🎯 이 프로그램은 무엇인가요?
 **마크다운 문서를 다양한 형식으로 변환하는 무료 온라인 도구입니다!**
 
-ChatGPT나 Claude 같은 AI가 작성해준 마크다운 문서를 **PDF, Word, PPT, 엑셀** 등으로 바로 변환할 수 있습니다.
+<a href="https://chatgpt.com/" target="_blank">ChatGPT</a>, <a href="https://claude.ai/" target="_blank">Claude</a>, <a href="https://gemini.google.com/" target="_blank">Gemini</a>가 작성해준 마크다운 문서를 **PDF, Word, PPT, 엑셀** 등으로 바로 변환할 수 있습니다.
 한글이 깨지지 않고, 설치 없이 바로 사용 가능한 **100% 무료 서비스**입니다.
 
 ### 👥 이런 분들에게 추천해요
 - 📚 **학생/직장인**: 보고서, 과제, 발표자료를 빠르게 만들고 싶은 분
-- 🤖 **AI 사용자**: ChatGPT/Claude 답변을 문서로 변환하고 싶은 분  
+- 🤖 **ChatGPT/Claude/Gemini 사용자**: 생성된 답변을 문서로 변환하고 싶은 분  
 - 📝 **블로거**: 마크다운으로 작성한 글을 다양한 형식으로 내보내고 싶은 분
 - 💼 **프리랜서**: 깔끔한 문서를 빠르게 만들어야 하는 분
 
@@ -162,10 +162,14 @@ ChatGPT나 Claude 같은 AI가 작성해준 마크다운 문서를 **PDF, Word, 
 ### 🎯 직접 작성하기
 왼쪽 편집기에 아래 마크다운 문법으로 직접 작성하고, 오른쪽에서 실시간으로 확인하세요!
 
-### 📱 ChatGPT/Claude 활용하기
-1. AI에게 **"마크다운 형식으로 작성해줘"** 라고 요청
-2. 답변 전체 복사 → 왼쪽 편집기에 **붙여넣기(Ctrl+V)**
-3. 원하는 형식으로 **다운로드** 클릭!
+### 📱 ChatGPT/Claude/Gemini 활용하기
+1. **아래 서비스 중 하나를 클릭해서 접속하세요:**
+   - 🤖 <a href="https://chatgpt.com/" target="_blank" style="color: #10a37f; font-weight: 600;">ChatGPT (클릭)</a>
+   - 🧠 <a href="https://claude.ai/" target="_blank" style="color: #6b46c1; font-weight: 600;">Claude (클릭)</a>  
+   - ✨ <a href="https://gemini.google.com/" target="_blank" style="color: #4285f4; font-weight: 600;">Gemini (클릭)</a>
+2. **"마크다운 형식으로 작성해줘"** 라고 요청
+3. 답변 전체 복사 → 왼쪽 편집기에 **붙여넣기(Ctrl+V)**
+4. 원하는 형식으로 **다운로드** 클릭!
 
 > 💡 **예시 프롬프트:** 
 > - "2025년 사업계획서를 **마크다운 형식**으로 작성해줘"
