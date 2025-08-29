@@ -26,86 +26,57 @@ interface ParsedElement {
   language?: string;
 }
 
-// HTML 태그 제거 함수
-function stripHtmlTags(text: string): string {
-  // onclick 등 이벤트 핸들러가 포함된 버튼 완전 제거
-  text = text.replace(/<button[^>]*onclick[^>]*>[\s\S]*?<\/button>/gi, '');
+// 전처리 함수 - HTML 블록 제거
+function preprocessMarkdown(markdown: string): string {
+  console.log('Preprocessing markdown, original length:', markdown.length);
   
-  // HTML 블록 전체 제거 (div, style, script 등)
-  text = text.replace(/<(style|script|div|span)[^>]*>[\s\S]*?<\/\1>/gi, '');
+  // 1. 인라인 스타일과 스크립트 태그 블록 제거
+  markdown = markdown.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  markdown = markdown.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   
-  // 버튼 태그의 내용만 추출
-  text = text.replace(/<button[^>]*>([^<]*)<\/button>/gi, '$1');
+  // 2. 멀티라인 HTML 블록 제거 (div, button 등)
+  markdown = markdown.replace(/<(div|button|span|form|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, '');
   
-  // 나머지 HTML 태그 제거
-  text = text.replace(/<[^>]+>/g, '');
+  // 3. self-closing 태그 제거
+  markdown = markdown.replace(/<[^>]+\/>/g, '');
   
-  // HTML 엔티티 디코딩
-  text = text.replace(/&nbsp;/g, ' ')
+  // 4. 나머지 HTML 태그 제거 (a, img 등 인라인 태그)
+  markdown = markdown.replace(/<\/?[^>]+(>|$)/g, '');
+  
+  // 5. HTML 엔티티 디코딩
+  markdown = markdown.replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&#39;/g, "'")
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–');
   
-  // 연속된 공백 정리
-  text = text.replace(/\s+/g, ' ').trim();
+  // 6. 연속된 빈 줄 정리 (3개 이상의 빈 줄을 2개로)
+  markdown = markdown.replace(/\n{3,}/g, '\n\n');
   
-  return text;
+  console.log('Preprocessing complete, new length:', markdown.length);
+  return markdown;
 }
 
 // 마크다운 파싱 함수
 function parseMarkdown(markdown: string): ParsedElement[] {
   console.log('parseMarkdown called with length:', markdown.length);
+  
+  // 전처리 적용 - HTML 블록 제거
+  markdown = preprocessMarkdown(markdown);
+  console.log('After preprocessing, length:', markdown.length);
+  
   const elements: ParsedElement[] = [];
   const lines = markdown.split('\n');
   console.log('Split into lines:', lines.length);
   let i = 0;
-  let safetyCounter = 0;
-  const maxLines = 10000; // 안전 장치
-
-  while (i < lines.length && safetyCounter < maxLines) {
-    safetyCounter++;
-    let line = lines[i];
+  
+  while (i < lines.length) {
+    const line = lines[i];
     
-    // 디버그 - 파싱 중인 라인 확인
-    if (i % 10 === 0) {
-      console.log(`Processing line ${i}/${lines.length}`);
-    }
-    
-    // HTML 블록 건너뛰기 (button, div, style 등)
-    if (line.trim().startsWith('<button') || line.trim().startsWith('<div') || line.trim().startsWith('<style')) {
-      let depth = 1;
-      const tagMatch = line.match(/<(\w+)/);
-      const tagName = tagMatch ? tagMatch[1] : 'div';
-      i++;
-      
-      let htmlSafetyCounter = 0;
-      const maxHtmlLines = 100; // HTML 블록 최대 라인 수 제한
-      
-      while (i < lines.length && depth > 0 && htmlSafetyCounter < maxHtmlLines) {
-        htmlSafetyCounter++;
-        const openTags = (lines[i].match(new RegExp(`<${tagName}`, 'g')) || []).length;
-        const closeTags = (lines[i].match(new RegExp(`</${tagName}>`, 'g')) || []).length;
-        depth += openTags - closeTags;
-        i++;
-      }
-      
-      if (htmlSafetyCounter >= maxHtmlLines) {
-        console.warn(`HTML block processing exceeded limit for tag: ${tagName}`);
-      }
-      continue;
-    }
-    
-    // onclick 등이 포함된 라인 건너뛰기
-    if (line.includes('onclick=') || line.includes('.catch(') || line.includes('.then(')) {
-      i++;
-      continue;
-    }
-
-    // 인라인 HTML 태그 제거
-    line = stripHtmlTags(line);
-    
+    // 빈 줄 건너뛰기
     if (!line.trim()) {
       i++;
       continue;
@@ -117,7 +88,7 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       elements.push({
         type: 'heading',
         level: headingMatch[1].length,
-        content: stripHtmlTags(headingMatch[2])
+        content: headingMatch[2]
       });
       i++;
       continue;
@@ -166,7 +137,7 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     if (line.startsWith('>')) {
       const quoteLines: string[] = [];
       while (i < lines.length && lines[i].startsWith('>')) {
-        quoteLines.push(stripHtmlTags(lines[i].replace(/^>\s*/, '')));
+        quoteLines.push(lines[i].replace(/^>\s*/, ''));
         i++;
       }
       elements.push({
@@ -183,12 +154,12 @@ function parseMarkdown(markdown: string): ParsedElement[] {
         if (lines[i].match(/^\d+\.\s/)) {
           // 새로운 목록 항목
           const item = lines[i].replace(/^\d+\.\s+/, '');
-          listItems.push(stripHtmlTags(item));
+          listItems.push(item);
         } else if (lines[i].match(/^\s{2,}/) && listItems.length > 0) {
           // 이전 항목의 연속 (들여쓰기된 내용)
           const continuation = lines[i].trim();
           if (continuation) {
-            listItems[listItems.length - 1] += ' ' + stripHtmlTags(continuation);
+            listItems[listItems.length - 1] += ' ' + continuation;
           }
         } else {
           break;
@@ -210,12 +181,12 @@ function parseMarkdown(markdown: string): ParsedElement[] {
         if (lines[i].match(/^\s*[-*+]\s/)) {
           // 새로운 목록 항목
           const item = lines[i].replace(/^\s*[-*+]\s+/, '');
-          listItems.push(stripHtmlTags(item));
+          listItems.push(item);
         } else if (lines[i].match(/^\s{2,}/) && listItems.length > 0) {
           // 이전 항목의 연속 (들여쓰기된 내용)
           const continuation = lines[i].trim();
           if (continuation) {
-            listItems[listItems.length - 1] += ' ' + stripHtmlTags(continuation);
+            listItems[listItems.length - 1] += ' ' + continuation;
           }
         } else {
           break;
@@ -230,44 +201,50 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       continue;
     }
 
-    // 표
-    if (line.includes('|')) {
-      const rows: string[][] = [];
+    // 표 - 구분선 확인으로 검증
+    if (line.includes('|') && i + 1 < lines.length) {
+      // 다음 줄이 구분선인지 확인
+      const nextLine = lines[i + 1];
+      const isSeparator = nextLine && /^\s*\|?\s*(:?-+:?\s*\|?)+\s*$/.test(nextLine);
       
-      // 헤더 행
-      if (i < lines.length && lines[i].includes('|')) {
-        const cells = lines[i].split('|')
-          .map(cell => stripHtmlTags(cell.trim()))
-          .filter(cell => cell);
-        if (cells.length > 0) {
-          rows.push(cells);
-          i++;
+      if (isSeparator) {
+        const rows: string[][] = [];
+        
+        // 헤더 행 파싱
+        const headerCells = line.split('|')
+          .map(cell => cell.trim())
+          .filter(cell => cell.length > 0);
+        
+        if (headerCells.length > 0) {
+          rows.push(headerCells);
+          i += 2; // 헤더와 구분선 건너뛰기
+          
+          // 데이터 행들 파싱
+          while (i < lines.length && lines[i].includes('|')) {
+            const cells = lines[i].split('|')
+              .map(cell => cell.trim())
+              .filter(cell => cell.length > 0);
+            
+            if (cells.length > 0) {
+              // 열 개수 일치 확인 (허용 오차 ±1)
+              if (Math.abs(cells.length - headerCells.length) <= 1) {
+                rows.push(cells);
+              }
+            }
+            i++;
+          }
+          
+          // 유효한 테이블인 경우만 추가
+          if (rows.length > 1) { // 헤더 + 최소 1개 데이터 행
+            elements.push({
+              type: 'table',
+              rows
+            });
+            console.log(`Table parsed with ${rows.length} rows`);
+          }
+          continue;
         }
       }
-      
-      // 구분선 스킵
-      if (i < lines.length && lines[i].match(/^[\s\-:|]+$/)) {
-        i++;
-      }
-      
-      // 데이터 행들
-      while (i < lines.length && lines[i].includes('|')) {
-        const cells = lines[i].split('|')
-          .map(cell => stripHtmlTags(cell.trim()))
-          .filter(cell => cell);
-        if (cells.length > 0) {
-          rows.push(cells);
-        }
-        i++;
-      }
-      
-      if (rows.length > 0) {
-        elements.push({
-          type: 'table',
-          rows
-        });
-      }
-      continue;
     }
 
     // 일반 단락
@@ -276,11 +253,7 @@ function parseMarkdown(markdown: string): ParsedElement[] {
       i++;
       while (i < lines.length && lines[i].trim() && 
              !lines[i].match(/^(#{1,6}|\d+\.|\s*[-*+]\s|>|```|\||---|~~~)/)) {
-        // HTML 태그가 있으면 건너뛰기
-        if (lines[i].trim().startsWith('<')) {
-          break;
-        }
-        paragraphLines.push(stripHtmlTags(lines[i]));
+        paragraphLines.push(lines[i]);
         i++;
       }
       const content = paragraphLines.join(' ').trim();
@@ -294,10 +267,6 @@ function parseMarkdown(markdown: string): ParsedElement[] {
     }
 
     i++;
-  }
-
-  if (safetyCounter >= maxLines) {
-    console.warn('parseMarkdown hit safety limit');
   }
   
   console.log('parseMarkdown completed with elements:', elements.length);
@@ -388,12 +357,15 @@ function processInlineMarkdown(text: string): TextRun[] {
 
 // DOCX 문서 생성
 export async function markdownToDocx(markdown: string): Promise<void> {
-  console.log('markdownToDocx started, input length:', markdown.length);
+  console.log('=== markdownToDocx STARTED ===');
+  console.log('Input markdown length:', markdown.length);
+  console.log('First 500 chars of markdown:', markdown.substring(0, 500));
   
   try {
     console.log('Starting parseMarkdown...');
     const elements = parseMarkdown(markdown);
     console.log('parseMarkdown completed, elements count:', elements.length);
+    console.log('Element types:', elements.map(e => e.type));
     
     // 긴 텍스트 처리를 위한 청크 처리
     const processInChunks = async () => {
@@ -402,6 +374,7 @@ export async function markdownToDocx(markdown: string): Promise<void> {
 
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
+        console.log(`Processing element ${i}/${elements.length}, type: ${element.type}`);
         
         // 주기적으로 브라우저가 응답할 수 있도록 함
         if (i % 10 === 0) {
@@ -528,7 +501,9 @@ export async function markdownToDocx(markdown: string): Promise<void> {
             break;
 
           case 'table':
+            console.log('Processing table with rows:', element.rows?.length);
             if (element.rows && element.rows.length > 0) {
+              console.log('Creating Word table...');
               // 실제 Word 표 생성
               const table = new Table({
                 rows: element.rows.map((row, rowIndex) => 
@@ -560,18 +535,25 @@ export async function markdownToDocx(markdown: string): Promise<void> {
               children.push(table);
               // 표 후 간격 추가
               children.push(new Paragraph({ text: '', spacing: { after: 120 } }));
+              console.log('Table added successfully');
             }
+            break;
+          
+          default:
+            console.log('Unknown element type:', element.type);
             break;
         }
       }
 
-    return children;
+      console.log('All elements processed, total children:', children.length);
+      return children;
     };
 
     // 문서 생성
     console.log('Calling processInChunks...');
     const children = await processInChunks();
     console.log('Document children created, count:', children.length);
+    console.log('Children types:', children.map(c => c.constructor.name));
   const doc = new Document({
     numbering: {
       config: [
@@ -671,9 +653,13 @@ export async function markdownToDocx(markdown: string): Promise<void> {
     
     console.log('Saving file...');
     saveAs(blob, 'document.docx');
-    console.log('File save initiated');
+    console.log('=== DOCX EXPORT COMPLETED ===');
   } catch (error) {
-    console.error('Error in markdownToDocx:', error);
+    console.error('=== ERROR in markdownToDocx ===');
+    console.error('Error details:', error);
+    if (error instanceof Error) {
+      console.error('Stack trace:', error.stack);
+    }
     throw error;
   }
 }

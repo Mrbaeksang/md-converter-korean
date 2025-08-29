@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
-import { markdownToHtml, exportAs } from './utils/converter';
+import { exportAs } from './utils/converter';
 import type { ExportFormat } from './utils/converter';
 import LoadingSpinner from './components/LoadingSpinner';
+import { PreviewPanel } from './components/PreviewPanel/PreviewPanel';
 import kakaoQR from './assets/kakao-qr.png';
 import buymeacoffeeQR from './assets/buymeacoffee-qr.png';
 import './App.css';
@@ -97,6 +98,7 @@ function App() {
     const guideContent = `# 📝 MD 변환기 by Mrbaeksang(devcom.kr)
 
 > 💡 **사용법을 까먹으셨나요?** 언제든지 상단의 **설명서** 버튼을 다시 누르면 이 화면을 볼 수 있습니다!
+> 📸 <a href="https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj" target="_blank" style="color: #3b82f6; font-weight: 600;">사진 설명서 바로가기</a> - 더 자세한 사용법을 그림으로 확인하세요!
 
 ## 🎯 이 프로그램은 무엇인가요?
 **마크다운 문서를 다양한 형식으로 변환하는 무료 온라인 도구입니다!**
@@ -167,14 +169,16 @@ function App() {
    - 🤖 <a href="https://chatgpt.com/" target="_blank" style="color: #10a37f; font-weight: 600;">ChatGPT (클릭)</a>
    - 🧠 <a href="https://claude.ai/" target="_blank" style="color: #6b46c1; font-weight: 600;">Claude (클릭)</a>  
    - ✨ <a href="https://gemini.google.com/" target="_blank" style="color: #4285f4; font-weight: 600;">Gemini (클릭)</a>
-2. **"마크다운 형식으로 작성해줘"** 라고 요청
-3. 답변 전체 복사 → 왼쪽 편집기에 **붙여넣기(Ctrl+V)**
-4. 원하는 형식으로 **다운로드** 클릭!
 
-> 💡 **예시 프롬프트:** 
-> - "2025년 사업계획서를 **마크다운 형식**으로 작성해줘"
-> - "회의록을 **마크다운 표**를 포함해서 정리해줘"
-> - "프레젠테이션용 내용을 **# 제목별로 구분**해서 작성해줘"
+2. **원하는 문서를 마크다운으로 요청하세요:**
+   > 💡 **예시 프롬프트:** 
+   > - "2025년 사업계획서를 **마크다운 형식**으로 작성해줘"
+   > - "회의록을 **마크다운 표**를 포함해서 정리해줘"
+   > - "프레젠테이션용 내용을 **# 제목별로 구분**해서 작성해줘"
+
+3. **답변 전체 복사** → 왼쪽 편집기에 **붙여넣기(Ctrl+V)**
+
+4. **원하는 형식으로 다운로드** 클릭!
 
 ---
 
@@ -264,7 +268,7 @@ function App() {
 > ✅ 서버 전송 없음 - 모든 변환은 여러분의 브라우저에서만  
 > ✅ 완벽한 프라이버시 - 작성 내용은 어디에도 저장되지 않음  
 > ✅ 오프라인 작동 - 한 번 열면 인터넷 없어도 OK  
-> ✅ 광고/추적 없음 - 순수한 도구로만 제공
+> ✅ 빠른 변환 속도 - 대용량 문서도 즉시 처리
 
 ---
 
@@ -274,7 +278,7 @@ function App() {
 A: 모든 파일은 UTF-8로 저장되어 한글이 절대 깨지지 않습니다. 혹시 깨진다면 열어보는 프로그램 설정을 확인해주세요.
 
 **Q: 이미지는 어떻게 넣나요?**  
-A: 현재는 텍스트만 지원합니다. 이미지는 Word나 PPT로 변환 후 직접 추가해주세요.
+A: 현재는 텍스트만 지원합니다. 이미지는 DOCX(Word)나 PPT로 변환 후 직접 추가해주세요.
 
 **Q: 파일이 저장되나요?**  
 A: 브라우저를 새로고침해도 작성 중인 내용은 자동 저장됩니다. (로컬 저장소 이용)
@@ -472,20 +476,49 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
               className="editor-textarea"
               value={markdown}
               onChange={(e) => setMarkdown(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  const textarea = e.currentTarget;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  const value = textarea.value;
+                  
+                  const beforeCursor = value.substring(0, start);
+                  const afterCursor = value.substring(end);
+                  
+                  // 이전 줄이 이미 두 개의 공백으로 끝나는지 확인
+                  const lastLineBreak = beforeCursor.lastIndexOf('\n');
+                  const currentLine = lastLineBreak === -1 ? beforeCursor : beforeCursor.substring(lastLineBreak + 1);
+                  
+                  // 현재 줄이 비어있으면 (연속 엔터) <br> 태그 추가
+                  if (currentLine.trim() === '' || currentLine === '  ') {
+                    const newValue = beforeCursor + '<br>\n' + afterCursor;
+                    setMarkdown(newValue);
+                    setTimeout(() => {
+                      textarea.selectionStart = textarea.selectionEnd = start + 5;
+                    }, 0);
+                  } else {
+                    // 일반 줄바꿈: 두 개의 공백 + 줄바꿈
+                    const newValue = beforeCursor + '  \n' + afterCursor;
+                    setMarkdown(newValue);
+                    setTimeout(() => {
+                      textarea.selectionStart = textarea.selectionEnd = start + 3;
+                    }, 0);
+                  }
+                }
+              }}
               placeholder="# 마크다운을 입력하세요..."
             />
           </div>
           
           {/* Preview Panel */}
-          <div className={`preview-panel ${isMobile && mobileView === 'preview' ? 'mobile-show' : ''}`}>
-            <div className="panel-header">
-              <span>미리보기</span>
-            </div>
-            <div 
-              className="preview-content"
-              dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }}
-            />
-          </div>
+          <PreviewPanel 
+            markdown={markdown}
+            isMobile={isMobile}
+            mobileView={mobileView}
+            onMarkdownChange={setMarkdown}
+          />
         </div>
       </div>
       

@@ -2,13 +2,7 @@
 // 한글 깨짐 없는 변환 기능 구현
 
 import { marked } from 'marked';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
-// html2pdf를 동적으로 import
-const loadHtml2Pdf = () => {
-    return import('html2pdf.js').then(module => module.default);
-};
 
 // Type definitions
 export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'ppt' | 'excel' | 'txt';
@@ -24,11 +18,9 @@ renderer.link = function({ href, title, tokens }): string {
 };
 
 // marked.js 설정
-marked.setOptions({
-    breaks: true,
-    gfm: true,
-    // @ts-expect-error - sanitize는 deprecated지만 아직 사용 가능
-    sanitize: false,
+marked.use({
+    breaks: true,  // 단일 줄바꿈을 <br>로 변환
+    gfm: true,     // GitHub Flavored Markdown
     renderer: renderer
 });
 
@@ -111,181 +103,17 @@ ${html}
     saveAs(blob, 'document.html');
 }
 
-// PDF Export with Korean font support
+// PDF Export - 동적으로 import
 export async function exportPdf(markdown: string): Promise<void> {
-    if (!markdown || markdown.trim() === '') {
-        alert('PDF로 변환할 내용이 없습니다.');
-        return;
-    }
-    
     try {
-        // html2pdf 동적 로드
-        const html2pdf = await loadHtml2Pdf();
-        
         const html = markdownToHtml(markdown);
         
-        // PDF용 컨테이너 생성 - 간단하게 구성
-        const container = document.createElement('div');
-        
-        // 직접 HTML과 스타일 삽입
-        container.innerHTML = html;
-        
-        // 테이블 열 개수 감지 - 가장 많은 열을 가진 테이블 찾기
-        let maxColumns = 0;
-        container.querySelectorAll('table').forEach(table => {
-            const firstRow = table.querySelector('tr');
-            if (firstRow) {
-                const columns = firstRow.querySelectorAll('th, td').length;
-                maxColumns = Math.max(maxColumns, columns);
-            }
-        });
-        
-        // 열 개수에 따른 페이지 설정
-        let orientation: 'portrait' | 'landscape' = 'portrait';
-        let tableScale = 1;
-        
-        if (maxColumns >= 8) {
-            // 8열 이상: 가로 모드
-            orientation = 'landscape';
-            console.log(`${maxColumns}열 테이블 감지 - 가로 모드로 전환`);
-        } else if (maxColumns >= 6) {
-            // 6-7열: 테이블 축소
-            tableScale = 0.85;
-            console.log(`${maxColumns}열 테이블 감지 - 85% 크기로 축소`);
-        }
-        
-        // 인라인 스타일 적용
-        container.style.width = orientation === 'landscape' ? '1122px' : '794px'; // A4 width at 96 DPI
-        container.style.padding = '40px';
-        container.style.background = 'white';
-        container.style.fontFamily = "'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif";
-        container.style.fontSize = '14px';
-        container.style.lineHeight = '1.6';
-        container.style.color = 'black';
-        
-        // 모든 요소에 스타일 적용
-        const allElements = container.querySelectorAll('*');
-        allElements.forEach(el => {
-            const element = el as HTMLElement;
-            element.style.color = 'black';
-            element.style.fontFamily = "'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif";
-        });
-        
-        // h1 스타일
-        container.querySelectorAll('h1').forEach(h1 => {
-            (h1 as HTMLElement).style.fontSize = '24px';
-            (h1 as HTMLElement).style.fontWeight = 'bold';
-            (h1 as HTMLElement).style.borderBottom = '2px solid black';
-            (h1 as HTMLElement).style.paddingBottom = '10px';
-            (h1 as HTMLElement).style.marginTop = '20px';
-            (h1 as HTMLElement).style.marginBottom = '20px';
-        });
-        
-        // h2 스타일
-        container.querySelectorAll('h2').forEach(h2 => {
-            (h2 as HTMLElement).style.fontSize = '20px';
-            (h2 as HTMLElement).style.fontWeight = 'bold';
-            (h2 as HTMLElement).style.borderBottom = '1px solid #666';
-            (h2 as HTMLElement).style.paddingBottom = '5px';
-            (h2 as HTMLElement).style.marginTop = '18px';
-            (h2 as HTMLElement).style.marginBottom = '18px';
-        });
-        
-        // table 스타일
-        container.querySelectorAll('table').forEach(table => {
-            (table as HTMLElement).style.borderCollapse = 'collapse';
-            // 6-7열 테이블은 크기 축소
-            if (tableScale < 1) {
-                (table as HTMLElement).style.width = `${100 * tableScale}%`;
-                (table as HTMLElement).style.fontSize = `${14 * tableScale}px`;
-            } else {
-                (table as HTMLElement).style.width = '100%';
-            }
-            (table as HTMLElement).style.margin = '15px 0';
-            // 테이블 전체가 나뉘지 않도록 설정
-            (table as HTMLElement).style.pageBreakInside = 'avoid';
-        });
-        
-        // 테이블의 각 행(tr)이 나뉘지 않도록 설정 (중요!)
-        container.querySelectorAll('tr').forEach(tr => {
-            (tr as HTMLElement).style.pageBreakInside = 'avoid';
-        });
-        
-        container.querySelectorAll('th, td').forEach(cell => {
-            (cell as HTMLElement).style.border = '1px solid black';
-            (cell as HTMLElement).style.padding = '8px';
-        });
-        
-        container.querySelectorAll('th').forEach(th => {
-            (th as HTMLElement).style.background = '#f0f0f0';
-            (th as HTMLElement).style.fontWeight = 'bold';
-        });
-        
-        // 코드 블록 스타일 + 페이지 잘림 방지
-        container.querySelectorAll('pre, code').forEach(codeBlock => {
-            (codeBlock as HTMLElement).style.pageBreakInside = 'avoid';
-            (codeBlock as HTMLElement).style.breakInside = 'avoid';
-            (codeBlock as HTMLElement).style.display = 'block';
-            if (codeBlock.tagName === 'PRE') {
-                (codeBlock as HTMLElement).style.backgroundColor = '#f4f4f4';
-                (codeBlock as HTMLElement).style.padding = '15px';
-                (codeBlock as HTMLElement).style.borderRadius = '5px';
-                (codeBlock as HTMLElement).style.whiteSpace = 'pre-wrap';
-                (codeBlock as HTMLElement).style.wordBreak = 'break-word';
-            }
-        });
-        
-        // DOM에 추가
-        document.body.appendChild(container);
-        
-        // 웹폰트 로드 대기
-        console.log('웹폰트 로드 중...');
-        
-        // Google Fonts 로드
-        if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
-            const link = document.createElement('link');
-            link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap';
-            link.rel = 'stylesheet';
-            document.head.appendChild(link);
-        }
-        
-        // 폰트 로드 대기
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const opt = {
-            margin: 10,
-            filename: 'document.pdf',
-            image: { 
-                type: 'jpeg', 
-                quality: 0.98
-            },
-            html2canvas: { 
-                scale: 2,
-                useCORS: true,
-                logging: true, // 로깅 활성화
-                backgroundColor: '#FFFFFF'
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: orientation // 동적으로 설정
-            },
-            pagebreak: { 
-                mode: ['avoid-all', 'css'], // css 모드를 추가하여 pageBreakInside 속성을 더 잘 인식
-                avoid: ['table', 'tr', 'pre', 'code'] // table과 tr을 명시적으로 추가
-            }
-        };
-        
-        console.log('PDF 생성 시작...');
-        await html2pdf().set(opt).from(container).save();
-        console.log('PDF 생성 완료');
-        
-        // container 제거
-        document.body.removeChild(container);
-        
+        // pdfExporter.ts 사용 (V2는 삭제됨)
+        const { exportToPdf } = await import('./pdfExporter');
+        await exportToPdf(html);
     } catch (error) {
-        console.error('PDF 생성 실패:', error);
-        alert(`PDF 생성 중 오류가 발생했습니다: ${error}`);
+        console.error('PDF export error:', error);
+        alert('PDF 내보내기 중 오류가 발생했습니다.');
     }
 }
 
@@ -312,142 +140,15 @@ export function exportTxt(markdown: string): void {
     saveAs(blob, 'document.txt');
 }
 
-// Excel Export - 표만 추출해서 엑셀로 변환
-export function exportExcel(markdown: string): void {
-    const wb = XLSX.utils.book_new();
-    
-    // 모든 값을 문자열로 처리 (숫자 변환 안 함)
-    const parseValue = (text: string): string => {
-        return text.replace(/\*\*/g, ''); // Bold 마크다운만 제거
-    };
-    
-    // 마크다운에서 테이블만 추출
-    const extractTables = (markdown: string): { name: string, data: string[][] }[] => {
-        const tables: { name: string, data: string[][] }[] = [];
-        const lines = markdown.split('\n');
-        let tableCount = 0;
-        let lastHeader = '';
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            
-            // 헤더 추출 (테이블 이름용)
-            if (line.trim().match(/^#{1,6}\s+(.+)$/)) {
-                lastHeader = line.trim().replace(/^#{1,6}\s+/, '');
-            }
-            
-            // 테이블 시작 감지
-            if (line.includes('|')) {
-                const tableData: string[][] = [];
-                let j = i;
-                
-                while (j < lines.length) {
-                    const currentLine = lines[j];
-                    const trimmed = currentLine.trim();
-                    
-                    // 테이블 끝 감지: |가 없거나 빈 줄
-                    if (!currentLine.includes('|')) {
-                        // 빈 줄이면 계속 진행, 아니면 테이블 끝
-                        if (trimmed !== '') {
-                            break;
-                        }
-                        j++;
-                        break;
-                    }
-                    
-                    // 구분선 건너뛰기
-                    if (trimmed.match(/^\|?[\s-|:]+\|?$/)) {
-                        j++;
-                        continue;
-                    }
-                    
-                    // 테이블 행 파싱
-                    const cells = trimmed
-                        .split('|')
-                        .map(cell => cell.trim())
-                        .filter(cell => cell !== '');
-                    
-                    if (cells.length > 0) {
-                        tableData.push(cells);
-                    }
-                    j++;
-                }
-                
-                if (tableData.length > 0) {
-                    tableCount++;
-                    const tableName = lastHeader || `Table ${tableCount}`;
-                    tables.push({ name: tableName, data: tableData });
-                    i = j - 1; // 다음 라인으로 이동
-                }
-            }
-        }
-        
-        return tables;
-    };
-    
-    const tables = extractTables(markdown);
-    
-    console.log(`찾은 테이블 개수: ${tables.length}`);
-    tables.forEach(t => console.log(`- ${t.name}: ${t.data.length}행`));
-    
-    if (tables.length === 0) {
-        alert('표가 없습니다!\n\n표를 만들려면:\n1. | 기호로 열을 구분해서 작성하세요\n2. 예시: | 이름 | 나이 | 직업 |\n\n자세한 사용법은 상단의 "설명서"를 확인해주세요.');
-        return;
+// Excel Export - 동적으로 import
+export async function exportExcel(markdown: string): Promise<void> {
+    try {
+        const { exportToExcel } = await import('./excelExporter');
+        await exportToExcel(markdown);
+    } catch (error) {
+        console.error('Excel export error:', error);
+        alert('엑셀 내보내기 중 오류가 발생했습니다.');
     }
-    
-    // 시트 이름 중복 방지를 위한 Set
-    const usedSheetNames = new Set<string>();
-    
-    // 각 테이블을 별도 시트로 추가
-    tables.forEach((table, index) => {
-        const wsData: (string | number | undefined)[][] = [];
-        const columnWidths: number[] = [];
-        
-        // 테이블 데이터 처리
-        table.data.forEach((row, rowIndex) => {
-            wsData[rowIndex] = [];
-            row.forEach((cell, colIndex) => {
-                const value = parseValue(cell);
-                wsData[rowIndex][colIndex] = value;
-                
-                // 열 너비 계산 (한글 고려)
-                const width = Math.min(value.length * 1.5 + 4, 50);
-                if (!columnWidths[colIndex] || columnWidths[colIndex] < width) {
-                    columnWidths[colIndex] = width;
-                }
-            });
-        });
-        
-        // 워크시트 생성
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // 열 너비 설정
-        ws['!cols'] = columnWidths.map(w => ({ wch: w || 15 }));
-        
-        // 시트 이름 (최대 31자, 특수문자 제거, 중복 방지)
-        const sheetName = table.name
-            .replace(/[:/*?[\]]/g, '')
-            .substring(0, 28)  // 번호 추가할 공간 확보
-            || `Table ${index + 1}`;
-        
-        // 중복 이름 처리
-        let finalSheetName = sheetName;
-        let counter = 1;
-        while (usedSheetNames.has(finalSheetName)) {
-            counter++;
-            finalSheetName = `${sheetName} (${counter})`;
-        }
-        usedSheetNames.add(finalSheetName);
-        
-        XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
-    });
-    
-    // Excel 파일 저장
-    XLSX.writeFile(wb, 'document.xlsx', { 
-        bookType: 'xlsx',
-        bookSST: false,
-        type: 'binary'
-    });
 }
 
 // DOCX Export - 동적으로 import

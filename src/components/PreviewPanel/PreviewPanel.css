@@ -1,0 +1,801 @@
+/* Preview Panel Styles */
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+/* Preview Tabs */
+.preview-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.preview-tabs.mobile {
+  padding: 8px 16px;
+  gap: 4px;
+}
+
+.preview-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.preview-tab:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.preview-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.tab-icon {
+  font-size: 16px;
+  color: inherit;
+}
+
+.tab-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+}
+
+/* Preview Content Wrapper */
+.preview-content-wrapper {
+  flex: 1;
+  overflow: auto;
+  background: var(--card);
+}
+
+/* HTML Preview - 기본 스타일 */
+.html-preview {
+  padding: 24px;
+  color: var(--foreground);
+  background: var(--card);
+}
+
+.html-preview * {
+  color: var(--foreground);
+}
+
+/* HTML Preview 코드 블록 공백 보존 */
+.html-preview pre {
+  white-space: pre-wrap; /* 공백과 줄바꿈 보존 */
+}
+
+.html-preview pre code {
+  white-space: pre; /* 코드 블록 내부 공백 보존 */
+}
+
+/* HTML 미리보기 안내 메시지 */
+.preview-notice.html-notice {
+  margin: 20px 24px;
+  background: #e3f2fd;
+  border-color: #90caf9;
+  color: #1565c0;
+}
+
+/* PDF Preview */
+.pdf-preview {
+  background: #525659;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+}
+
+.pdf-preview .preview-notice.pdf-notice {
+  background: #fff3cd;
+  margin-bottom: 20px;
+  max-width: 100%;
+}
+
+.pdf-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.pdf-page {
+  width: 100%;
+  max-width: 794px;
+  aspect-ratio: 210 / 297; /* A4 비율 */
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 5%;
+  margin: 0 auto 20px;
+  color: black;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.pdf-page.landscape {
+  max-width: 1122px;
+  aspect-ratio: 297 / 210; /* A4 가로 비율 */
+}
+
+.page-number {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #666;
+  font-size: 12px;
+}
+
+.pdf-content {
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+.pdf-content h1 {
+  font-size: 20px;
+  border-bottom: 1.5px solid black;
+  padding-bottom: 6px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.pdf-content h2 {
+  font-size: 16px;
+  border-bottom: 1px solid #666;
+  padding-bottom: 3px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.pdf-content table {
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.pdf-content th,
+.pdf-content td {
+  border: 1px solid black;
+  padding: 4px 6px;
+  word-break: break-word;
+  font-size: 11px;
+}
+
+.pdf-content th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+/* PDF 내 모든 요소 텍스트 색상 강제 */
+.pdf-content * {
+  color: black !important;
+}
+
+/* Excel Preview */
+.excel-preview {
+  padding: 20px;
+  background: #f3f3f3;
+}
+
+/* Excel 미리보기 안내 메시지 */
+.excel-preview .preview-notice.excel-notice {
+  background: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+  margin-bottom: 20px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.no-tables-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted-foreground);
+}
+
+.no-tables-message p {
+  margin: 10px 0;
+}
+
+.hint {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.excel-sheets {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.excel-sheet {
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sheet-tab {
+  background: #217346;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sheet-content {
+  padding: 20px;
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #d0d7de;
+}
+
+.excel-table th,
+.excel-table td {
+  border: 1px solid #d0d7de;
+  padding: 8px 12px;
+  text-align: left;
+  color: black;
+}
+
+.excel-table th {
+  background: #f6f8fa;
+  font-weight: 600;
+  color: black;
+}
+
+/* DOCX Preview */
+.docx-preview {
+  background: #a7a7a7;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  min-height: 100%;
+  overflow: auto;
+}
+
+/* 미리보기 안내 메시지 */
+.preview-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-bottom: 10px;
+  color: #856404;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notice-icon {
+  font-size: 16px;
+}
+
+.notice-text {
+  flex: 1;
+}
+
+.docx-page {
+  width: 100%;
+  max-width: 816px;
+  aspect-ratio: 210 / 297; /* A4 비율 */
+  min-height: 1056px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 0 auto 20px;
+  box-sizing: border-box;
+}
+
+.docx-header {
+  height: 72px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.docx-content {
+  flex: 1;
+  padding: 8% 8% 10% 8%;
+  font-family: 'Calibri', 'Noto Sans KR', sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
+  color: black;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* DOCX 내 모든 요소 텍스트 색상 강제 */
+.docx-content * {
+  color: black !important;
+}
+
+/* DOCX 표 스타일 */
+.docx-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 10pt;
+}
+
+.docx-content th,
+.docx-content td {
+  border: 1px solid #d0d0d0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.docx-content th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.docx-content h1 {
+  font-size: 16pt;
+  font-weight: bold;
+  margin: 20px 0 12px 0;
+}
+
+.docx-content h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 16px 0 10px 0;
+}
+
+.docx-content h3 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 12px 0 8px 0;
+}
+
+.docx-content p {
+  margin: 8px 0;
+}
+
+.docx-content ul,
+.docx-content ol {
+  margin: 8px 0;
+  padding-left: 36px;
+}
+
+.docx-content li {
+  margin: 4px 0;
+}
+
+.docx-content blockquote {
+  border-left: 4px solid #d0d0d0;
+  padding-left: 16px;
+  margin: 12px 0;
+  color: #666;
+}
+
+.docx-content code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10pt;
+}
+
+.docx-content pre {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10pt;
+  white-space: pre-wrap; /* 공백과 줄바꿈 보존 */
+}
+
+.docx-content pre code {
+  white-space: pre; /* 코드 블록 내부 공백 보존 */
+}
+
+.docx-content a {
+  color: #0066cc !important;
+  text-decoration: underline;
+}
+
+.docx-footer {
+  height: 72px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 10pt;
+}
+
+/* PPT Preview */
+.ppt-preview {
+  background: #1e1e1e;
+  padding: 20px;
+  min-height: 100%;
+}
+
+/* PPT 미리보기 안내 메시지 */
+.ppt-preview .preview-notice.ppt-notice {
+  background: #fff3cd;
+  margin: 0 auto 20px;
+  max-width: 1200px;
+}
+
+.ppt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.slide-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  color: white;
+}
+
+.slide-controls button {
+  background: #2b579a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.slide-controls button:hover:not(:disabled) {
+  background: #3b6fb5;
+}
+
+.slide-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slide-counter {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.slide-viewport {
+  display: flex;
+  justify-content: center;
+}
+
+.ppt-slide {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 16 / 9; /* PPT 비율 */
+  background: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  padding: 6%;
+  display: flex;
+  flex-direction: column;
+  color: black;
+  box-sizing: border-box;
+}
+
+.slide-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #2b579a;
+}
+
+.slide-title.slide-title-page {
+  font-size: 44px;
+  text-align: center;
+  border-bottom: 3px solid #2b579a;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+}
+
+.slide-subtitle {
+  font-size: 18px;
+  color: #666;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.slide-content {
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-y: auto;
+  color: black;
+}
+
+.slide-content p {
+  margin: 8px 0;
+}
+
+.slide-content h3.slide-subtitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #444;
+  margin: 16px 0 8px 0;
+}
+
+/* 슬라이드 리스트 */
+.slide-list {
+  font-size: 16px;
+  line-height: 1.8;
+  padding-left: 30px;
+}
+
+.slide-list li {
+  margin: 10px 0;
+  color: black;
+}
+
+/* 슬라이드 테이블 */
+.slide-table-container {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+}
+
+.slide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.slide-table th,
+.slide-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  color: black;
+}
+
+.slide-table th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+/* 슬라이드 코드 */
+.slide-code {
+  flex: 1;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+  overflow: auto;
+}
+
+.slide-code pre {
+  margin: 0;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+  white-space: pre-wrap; /* 공백과 줄바꿈 보존 */
+}
+
+.slide-code pre code {
+  white-space: pre; /* 코드 블록 내부 공백 보존 */
+}
+
+/* PPT 슬라이드 내 모든 요소 텍스트 색상 강제 */
+.slide-content *,
+.slide-list *,
+.slide-table *,
+.slide-code * {
+  color: black !important;
+}
+
+.slide-thumbnails {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 10px 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.slide-thumb {
+  width: 120px;
+  height: 68px;
+  background: white;
+  border: 2px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.slide-thumb:hover {
+  border-color: #2b579a;
+  transform: scale(1.05);
+}
+
+.slide-thumb.active {
+  border-color: #2b579a;
+  border-width: 3px;
+}
+
+.thumb-number {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #2b579a;
+}
+
+.thumb-title {
+  font-size: 10px;
+  padding: 0 8px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: black;
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) {
+  .pdf-page {
+    padding: 4%;
+  }
+
+  .docx-content {
+    padding: 6% 6% 8% 6%;
+  }
+
+  .ppt-slide {
+    padding: 5%;
+  }
+
+  .slide-title {
+    font-size: 24px;
+  }
+
+  .slide-content {
+    font-size: 14px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .preview-tabs {
+    justify-content: center;
+  }
+
+  .preview-tab {
+    padding: 8px;
+  }
+
+  .preview-tabs.mobile .preview-tab {
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+  }
+
+  .pdf-page {
+    padding: 3%;
+    aspect-ratio: auto;
+    min-height: 600px;
+  }
+
+  .pdf-content h1 {
+    font-size: 18px;
+  }
+
+  .pdf-content h2 {
+    font-size: 14px;
+  }
+
+  .docx-page {
+    aspect-ratio: auto;
+    min-height: 800px;
+  }
+
+  .docx-header {
+    height: 40px;
+  }
+
+  .docx-footer {
+    height: 40px;
+  }
+
+  .docx-content {
+    padding: 5%;
+    font-size: 10pt;
+  }
+
+  .ppt-slide {
+    aspect-ratio: auto;
+    min-height: 400px;
+    padding: 4%;
+  }
+
+  .slide-title {
+    font-size: 20px;
+  }
+
+  .slide-title.slide-title-page {
+    font-size: 28px;
+  }
+
+  .slide-content {
+    font-size: 14px;
+  }
+
+  .slide-thumbnails {
+    padding: 10px;
+  }
+
+  .slide-thumb {
+    width: 100px;
+    height: 56px;
+  }
+
+  .excel-sheet {
+    border-radius: 4px;
+  }
+
+  .sheet-content {
+    padding: 10px;
+  }
+
+  .excel-table {
+    font-size: 12px;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    padding: 6px 8px;
+  }
+}
+
+/* 읽기 전용 스타일 - 추후 편집 기능 추가 시 활용 */
