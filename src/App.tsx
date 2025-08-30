@@ -99,6 +99,7 @@ function App() {
 
 > 💡 **사용법을 까먹으셨나요?** 언제든지 상단의 **설명서** 버튼을 다시 누르면 이 화면을 볼 수 있습니다!
 > 📸 <a href="https://devcom.kr/main/posts/cmetxbfl20001u8vct1rf83cj" target="_blank" style="color: #3b82f6; font-weight: 600;">사진 설명서 바로가기</a> - 더 자세한 사용법을 그림으로 확인하세요!
+> 🎥 <a href="https://www.youtube.com/watch?v=_OwHqCV04Pg" target="_blank" style="color: #ff0000; font-weight: 600;">유튜브 영상 바로가기</a> - 동영상으로 쉽게 배워보세요!
 
 ## 🎯 이 프로그램은 무엇인가요?
 **마크다운 문서를 다양한 형식으로 변환하는 무료 온라인 도구입니다!**

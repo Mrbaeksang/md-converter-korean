@@ -156,7 +156,7 @@ export async function exportDocx(markdown: string): Promise<void> {
     try {
         console.log('Starting DOCX export...');
         console.log('Importing docxExporter module...');
-        const { markdownToDocx } = await import('./docxExporter');
+        const { markdownToDocx } = await import('./docxExporterNew');
         console.log('docxExporter module loaded successfully');
         console.log('Calling markdownToDocx function...');
         await markdownToDocx(markdown);
