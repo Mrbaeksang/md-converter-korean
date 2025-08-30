@@ -28,13 +28,8 @@ function parseHtmlToDocx(html: string): (Paragraph | Table)[] {
   function processNode(node: Node): void {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
-      if (text && elements.length > 0 && elements[elements.length - 1] instanceof Paragraph) {
-        // 마지막 요소가 Paragraph면 텍스트 추가
-        const lastPara = elements[elements.length - 1] as Paragraph;
-        const children = lastPara.root[1].root;
-        children.push(new TextRun(text));
-      } else if (text) {
-        // 새 Paragraph 생성
+      if (text) {
+        // 항상 새 Paragraph 생성 (텍스트 노드는 독립적으로 처리)
         elements.push(new Paragraph({
           children: [new TextRun(text)],
           spacing: { after: 120 }
@@ -194,14 +189,8 @@ function parseHtmlToDocx(html: string): (Paragraph | Table)[] {
       }
       
       case 'br': {
-        // 줄바꿈 처리
-        if (elements.length > 0 && elements[elements.length - 1] instanceof Paragraph) {
-          const lastPara = elements[elements.length - 1] as Paragraph;
-          const children = lastPara.root[1].root;
-          children.push(new TextRun({ text: '', break: 1 }));
-        } else {
-          elements.push(new Paragraph({ text: '' }));
-        }
+        // 줄바꿈 처리 - 빈 단락 추가
+        elements.push(new Paragraph({ text: '' }));
         break;
       }
       
