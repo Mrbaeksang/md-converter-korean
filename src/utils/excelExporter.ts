@@ -151,11 +151,12 @@ export function exportToExcel(markdown: string): void {
                 const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
                 if (!ws[cellAddress]) continue;
                 
-                // 셀 스타일 설정 (텍스트 줄바꿈 활성화)
+                // 셀 스타일 설정 (텍스트 줄바꿈 활성화 및 위쪽 맞춤)
                 if (!ws[cellAddress].s) ws[cellAddress].s = {};
                 ws[cellAddress].s.alignment = {
                     wrapText: true,
-                    vertical: 'top'
+                    vertical: 'top',
+                    horizontal: 'left'
                 };
             }
         }
@@ -182,6 +183,7 @@ export function exportToExcel(markdown: string): void {
     XLSX.writeFile(wb, 'document.xlsx', { 
         bookType: 'xlsx',
         bookSST: false,
-        type: 'binary'
+        type: 'binary',
+        cellStyles: true  // 셀 스타일 활성화
     });
 }
