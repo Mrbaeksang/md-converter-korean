@@ -8,7 +8,11 @@ export function exportToExcel(markdown: string): void {
     
     // 모든 값을 문자열로 처리 (숫자 변환 안 함)
     const parseValue = (text: string): string => {
-        return text.replace(/\*\*/g, ''); // Bold 마크다운만 제거
+        // Bold 마크다운 제거
+        let result = text.replace(/\*\*/g, '');
+        // <br> 태그를 실제 줄바꿈(\n)으로 변환
+        result = result.replace(/<br\s*\/?>/gi, '\n');
+        return result;
     };
     
     // 마크다운에서 테이블만 추출
@@ -100,8 +104,19 @@ export function exportToExcel(markdown: string): void {
                 const value = parseValue(cell);
                 wsData[rowIndex][colIndex] = value;
                 
-                // 열 너비 계산 (한글 고려)
-                const width = Math.min(value.length * 1.5 + 4, 50);
+                // 열 너비 계산 - 각 줄의 최대 길이를 기준으로
+                const lines = value.split('\n');
+                let maxLineLength = 0;
+                lines.forEach(line => {
+                    // 한글은 2배 너비로 계산
+                    const koreanChars = (line.match(/[가-힣]/g) || []).length;
+                    const otherChars = line.length - koreanChars;
+                    const lineLength = koreanChars * 2 + otherChars;
+                    maxLineLength = Math.max(maxLineLength, lineLength);
+                });
+                
+                // 최대 너비 제한 없이 콘텐츠에 맞게 설정
+                const width = maxLineLength * 1.2 + 5;
                 if (!columnWidths[colIndex] || columnWidths[colIndex] < width) {
                     columnWidths[colIndex] = width;
                 }
@@ -113,6 +128,37 @@ export function exportToExcel(markdown: string): void {
         
         // 열 너비 설정
         ws['!cols'] = columnWidths.map(w => ({ wch: w || 15 }));
+        
+        // 행 높이 자동 조정 및 텍스트 줄바꿈 설정
+        const rowHeights: { hpt?: number }[] = [];
+        wsData.forEach((row, rowIndex) => {
+            let maxLines = 1;
+            row.forEach((cell) => {
+                if (typeof cell === 'string') {
+                    const lines = cell.split('\n').length;
+                    maxLines = Math.max(maxLines, lines);
+                }
+            });
+            // 각 줄당 약 15pt, 여백 추가
+            rowHeights[rowIndex] = { hpt: maxLines * 15 + 5 };
+        });
+        ws['!rows'] = rowHeights;
+        
+        // 모든 셀에 텍스트 줄바꿈 스타일 적용
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellAddress]) continue;
+                
+                // 셀 스타일 설정 (텍스트 줄바꿈 활성화)
+                if (!ws[cellAddress].s) ws[cellAddress].s = {};
+                ws[cellAddress].s.alignment = {
+                    wrapText: true,
+                    vertical: 'top'
+                };
+            }
+        }
         
         // 시트 이름 (최대 31자, 특수문자 제거, 중복 방지)
         const sheetName = table.name
