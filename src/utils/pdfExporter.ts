@@ -81,6 +81,13 @@ function parseHtmlToElements(html: string): HTMLElement[] {
         element.style.color = 'black';
     });
     
+    // 빈 단락 제거 (빈 줄로 인한 불필요한 페이지 분할 방지)
+    tempDiv.querySelectorAll('p').forEach(p => {
+        if (p.textContent?.trim() === '' && p.innerHTML.trim() === '') {
+            p.style.display = 'none';
+        }
+    });
+    
     // 헤딩 스타일
     tempDiv.querySelectorAll('h1').forEach(h1 => {
         (h1 as HTMLElement).style.fontSize = '20px';
@@ -161,7 +168,26 @@ function parseHtmlToElements(html: string): HTMLElement[] {
         (code as HTMLElement).style.fontSize = '11px';
     });
     
-    return Array.from(tempDiv.children) as HTMLElement[];
+    // 빈 요소들을 필터링하여 반환
+    const elements = Array.from(tempDiv.children) as HTMLElement[];
+    return elements.filter(element => {
+        // 완전히 빈 요소는 제외
+        const textContent = element.textContent?.trim() || '';
+        const innerHTML = element.innerHTML?.trim() || '';
+        
+        // 텍스트나 자식 요소가 있으면 포함
+        if (textContent.length > 0 || element.children.length > 0) {
+            return true;
+        }
+        
+        // br, hr 등의 단독 태그는 포함
+        const tagName = element.tagName.toLowerCase();
+        if (['br', 'hr', 'img'].includes(tagName)) {
+            return true;
+        }
+        
+        return false;
+    });
 }
 
 /**
