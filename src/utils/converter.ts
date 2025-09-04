@@ -3,6 +3,10 @@
 
 import { marked } from 'marked';
 import { saveAs } from 'file-saver';
+import { exportToPdf } from './pdfExporter';
+import { exportToExcel } from './excelExporter';
+import { markdownToDocx } from './docxExporterNew';
+import { markdownToPpt } from './pptExporter';
 
 // Type definitions
 export type ExportFormat = 'html' | 'styled-html' | 'pdf' | 'docx' | 'ppt' | 'excel' | 'txt';
@@ -103,13 +107,10 @@ ${html}
     saveAs(blob, 'document.html');
 }
 
-// PDF Export - 동적으로 import
+// PDF Export
 export async function exportPdf(markdown: string): Promise<void> {
     try {
         const html = markdownToHtml(markdown);
-        
-        // pdfExporter.ts 사용 (V2는 삭제됨)
-        const { exportToPdf } = await import('./pdfExporter');
         await exportToPdf(html);
     } catch (error) {
         console.error('PDF export error:', error);
@@ -140,10 +141,9 @@ export function exportTxt(markdown: string): void {
     saveAs(blob, 'document.txt');
 }
 
-// Excel Export - 동적으로 import
+// Excel Export
 export async function exportExcel(markdown: string): Promise<void> {
     try {
-        const { exportToExcel } = await import('./excelExporter');
         await exportToExcel(markdown);
     } catch (error) {
         console.error('Excel export error:', error);
@@ -151,13 +151,10 @@ export async function exportExcel(markdown: string): Promise<void> {
     }
 }
 
-// DOCX Export - 동적으로 import
+// DOCX Export
 export async function exportDocx(markdown: string): Promise<void> {
     try {
         console.log('Starting DOCX export...');
-        console.log('Importing docxExporter module...');
-        const { markdownToDocx } = await import('./docxExporterNew');
-        console.log('docxExporter module loaded successfully');
         console.log('Calling markdownToDocx function...');
         await markdownToDocx(markdown);
         console.log('DOCX export completed successfully');
@@ -173,9 +170,6 @@ export async function exportDocx(markdown: string): Promise<void> {
 export async function exportPpt(markdown: string): Promise<void> {
     try {
         console.log('Starting PPT export...');
-        console.log('Importing pptExporter module...');
-        const { markdownToPpt } = await import('./pptExporter');
-        console.log('pptExporter module loaded successfully');
         console.log('Calling markdownToPpt function...');
         await markdownToPpt(markdown);
         console.log('PPT export completed successfully');
