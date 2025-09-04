@@ -67,6 +67,7 @@ function createA4Page(): HTMLDivElement {
  */
 function parseHtmlToElements(html: string): HTMLElement[] {
     const tempDiv = document.createElement('div');
+    // HTML을 그대로 사용 (미리보기와 동일하게)
     tempDiv.innerHTML = html;
     
     // 스타일 적용
@@ -81,12 +82,7 @@ function parseHtmlToElements(html: string): HTMLElement[] {
         element.style.color = 'black';
     });
     
-    // 빈 단락 제거 (빈 줄로 인한 불필요한 페이지 분할 방지)
-    tempDiv.querySelectorAll('p').forEach(p => {
-        if (p.textContent?.trim() === '' && p.innerHTML.trim() === '') {
-            p.style.display = 'none';
-        }
-    });
+    // 빈 단락들은 나중에 필터링에서 제거됨
     
     // 헤딩 스타일
     tempDiv.querySelectorAll('h1').forEach(h1 => {
@@ -168,25 +164,62 @@ function parseHtmlToElements(html: string): HTMLElement[] {
         (code as HTMLElement).style.fontSize = '11px';
     });
     
-    // 빈 요소들을 필터링하여 반환
-    const elements = Array.from(tempDiv.children) as HTMLElement[];
-    return elements.filter(element => {
-        // 완전히 빈 요소는 제외
-        const textContent = element.textContent?.trim() || '';
+    // BR 태그 처리 및 요소 분리
+    const elements: HTMLElement[] = [];
+    
+    // 모든 최상위 요소 가져오기
+    Array.from(tempDiv.children).forEach(child => {
+        const element = child as HTMLElement;
         
-        // 텍스트나 자식 요소가 있으면 포함
-        if (textContent.length > 0 || element.children.length > 0) {
-            return true;
+        // 독립된 BR 태그는 스킵
+        if (element.tagName === 'BR') {
+            return;
         }
         
-        // br, hr 등의 단독 태그는 포함
-        const tagName = element.tagName.toLowerCase();
-        if (['br', 'hr', 'img'].includes(tagName)) {
-            return true;
+        // P 태그 안에 BR이 많으면 분할 고려
+        if (element.tagName === 'P') {
+            const brCount = (element.innerHTML.match(/<br/gi) || []).length;
+            
+            // BR이 10개 이상이면 분할
+            if (brCount > 10) {
+                const parts = element.innerHTML.split(/<br\s*\/?>/gi);
+                let currentP = document.createElement('p');
+                let lineCount = 0;
+                
+                parts.forEach((part, index) => {
+                    if (part.trim() || index < parts.length - 1) {
+                        if (lineCount >= 10 && part.trim()) {
+                            // 10줄마다 새 P 태그로 분할
+                            if (currentP.innerHTML.trim()) {
+                                elements.push(currentP);
+                            }
+                            currentP = document.createElement('p');
+                            lineCount = 0;
+                        }
+                        
+                        if (part.trim()) {
+                            currentP.innerHTML += (currentP.innerHTML ? '<br>' : '') + part;
+                        } else if (index < parts.length - 1) {
+                            currentP.innerHTML += '<br>';
+                        }
+                        lineCount++;
+                    }
+                });
+                
+                if (currentP.innerHTML.trim()) {
+                    elements.push(currentP);
+                }
+            } else {
+                // BR이 적으면 그대로 사용
+                elements.push(element);
+            }
+        } else {
+            // P 태그가 아닌 다른 요소는 그대로 추가
+            elements.push(element);
         }
-        
-        return false;
     });
+    
+    return elements;
 }
 
 /**
@@ -213,67 +246,53 @@ function distributeElementsToPages(elements: HTMLElement[]): HTMLDivElement[] {
     measurer.style.background = 'white';
     document.body.appendChild(measurer);
     
-    // 안전 마진 - 페이지 하단에 더 많은 여유 공간 확보
-    const SAFE_MARGIN = 50; // 50px로 증가
+    // 안전 마진 - 페이지 끝부분 여유 공간
+    const SAFE_MARGIN = 30; // 페이지 끝에서 30px 여유 (BR 많은 콘텐츠 고려)
     const MAX_HEIGHT = CONTENT_HEIGHT_PX - SAFE_MARGIN;
     
     elements.forEach((element, index) => {
-        // 요소 높이 측정 (마진 포함)
+        // 요소 높이 측정
         const clone = element.cloneNode(true) as HTMLElement;
-        measurer.innerHTML = ''; // 이전 내용 제거
+        measurer.innerHTML = '';
         measurer.appendChild(clone);
         
-        // 강제로 레이아웃 재계산
-        void measurer.offsetHeight; // Force reflow
+        // 레이아웃 재계산 - 강제 리플로우
+        void measurer.offsetHeight;
         
-        // 더 간단하고 안정적인 높이 계산
-        const elementHeight = Math.max(clone.offsetHeight, clone.scrollHeight, 20); // 최소 20px
+        // 실제 높이 측정 - 정확한 계산을 위해 여러 방법 사용
+        const rect = clone.getBoundingClientRect();
         
-        const elementType = element.tagName;
-        const elementText = clone.textContent?.substring(0, 30) || '';
-        console.log(`요소 ${index} (${elementType}): 높이 ${elementHeight}px, 현재: ${currentHeight}px/${MAX_HEIGHT}px, 내용: "${elementText}..."`);
+        // BR 태그 개수 세기
+        const brCount = (element.innerHTML.match(/<br/gi) || []).length;
         
-        // 매우 큰 요소(500px 이상)만 별도 처리
-        if (elementHeight > 500) {
-            console.log(`  → 매우 큰 요소 (${elementHeight}px) 별도 처리`);
-            // 현재 페이지에 내용이 있으면 저장
-            if (currentHeight > 0) {
-                pages.push(currentPage);
-                currentPage = createA4Page();
-                currentContentWrapper = currentPage.querySelector('.pdf-content-wrapper') as HTMLDivElement;
-                currentHeight = 0;
+        // 기본 높이 계산
+        let elementHeight = Math.max(
+            rect.height || 30,
+            clone.offsetHeight || 30,
+            clone.scrollHeight || 30,
+            30
+        );
+        
+        // BR 태그가 많으면 추가 높이 보정 (BR 하나당 약 18px)
+        if (brCount > 0) {
+            // BR이 이미 높이에 포함되어 있지 않은 경우 추가
+            const minExpectedHeight = (brCount + 1) * 18; // 줄 높이 기준
+            if (elementHeight < minExpectedHeight) {
+                elementHeight = minExpectedHeight;
             }
-            
-            // 큰 요소를 그대로 추가 (overflow 처리됨)
-            const actualElement = element.cloneNode(true) as HTMLElement;
-            currentContentWrapper.appendChild(actualElement);
-            pages.push(currentPage);
-            
-            // 새 페이지 시작
-            currentPage = createA4Page();
-            currentContentWrapper = currentPage.querySelector('.pdf-content-wrapper') as HTMLDivElement;
-            currentHeight = 0;
-            return;
         }
         
-        // 페이지 넘침 체크 (더 보수적으로)
-        const willOverflow = currentHeight + elementHeight > MAX_HEIGHT;
+        const elementType = element.tagName;
+        const elementText = element.textContent?.substring(0, 30) || '';
         
-        // 테이블인 경우 특별 처리
-        if (elementType === 'TABLE' && currentHeight > 0) {
-            // 테이블이 페이지 60% 이상 사용한 곳에서 시작하면 다음 페이지로
-            if (currentHeight > MAX_HEIGHT * 0.6) {
-                console.log(`  → 테이블이 페이지 하단에 너무 가까움 (${currentHeight}px/${MAX_HEIGHT}px), 다음 페이지로`);
-                pages.push(currentPage);
-                currentPage = createA4Page();
-                currentContentWrapper = currentPage.querySelector('.pdf-content-wrapper') as HTMLDivElement;
-                currentHeight = 0;
-            }
-        } 
-        // 일반 요소가 현재 페이지를 넘어가는 경우
-        else if (currentHeight > 0 && willOverflow) {
-            console.log(`  → 페이지 넘침 감지: ${currentHeight} + ${elementHeight} = ${currentHeight + elementHeight}px > ${MAX_HEIGHT}px`);
-            console.log(`  → 페이지 ${pages.length + 1} 완성, 새 페이지 시작`);
+        // 최종 높이 (여백 포함)
+        const adjustedHeight = elementHeight + 10; // 요소 간 기본 여백
+        
+        console.log(`요소 ${index} (${elementType}): 높이 ${adjustedHeight}px${brCount > 0 ? ` (BR ${brCount}개)` : ''}, 현재: ${currentHeight}px/${MAX_HEIGHT}px, 내용: "${elementText}..."`);
+        
+        // 페이지 넘침 체크
+        if (currentHeight + adjustedHeight > MAX_HEIGHT && currentHeight > 0) {
+            console.log(`  → 페이지 넘김: ${currentHeight} + ${adjustedHeight} = ${currentHeight + adjustedHeight}px > ${MAX_HEIGHT}px`);
             pages.push(currentPage);
             currentPage = createA4Page();
             currentContentWrapper = currentPage.querySelector('.pdf-content-wrapper') as HTMLDivElement;
@@ -283,7 +302,7 @@ function distributeElementsToPages(elements: HTMLElement[]): HTMLDivElement[] {
         // 요소를 현재 페이지의 콘텐츠 wrapper에 추가
         const actualElement = element.cloneNode(true) as HTMLElement;
         currentContentWrapper.appendChild(actualElement);
-        currentHeight += elementHeight;
+        currentHeight += adjustedHeight;
         console.log(`  → 추가 완료. 새 누적 높이: ${currentHeight}px`);
     });
     

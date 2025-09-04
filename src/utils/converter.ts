@@ -107,10 +107,16 @@ ${html}
     saveAs(blob, 'document.html');
 }
 
+// PDF용 마크다운 변환 (미리보기와 동일하게)
+function markdownToHtmlForPdf(markdown: string): string {
+    // 미리보기와 완전히 동일한 설정 사용
+    return markdownToHtml(markdown);
+}
+
 // PDF Export
 export async function exportPdf(markdown: string): Promise<void> {
     try {
-        const html = markdownToHtml(markdown);
+        const html = markdownToHtmlForPdf(markdown);  // PDF 전용 렌더링
         await exportToPdf(html);
     } catch (error) {
         console.error('PDF export error:', error);
