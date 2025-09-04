@@ -177,11 +177,15 @@ function distributeElementsToPages(elements: HTMLElement[]): HTMLDivElement[] {
     const measurer = document.createElement('div');
     measurer.style.position = 'absolute';
     measurer.style.visibility = 'hidden';
+    measurer.style.left = '-9999px';
+    measurer.style.top = '0';
     measurer.style.width = `${CONTENT_WIDTH_PX}px`;
     measurer.style.fontFamily = "'Noto Sans KR', 'Malgun Gothic', sans-serif";
     measurer.style.fontSize = '12px';
     measurer.style.lineHeight = '1.5';
     measurer.style.boxSizing = 'border-box';
+    measurer.style.color = 'black';
+    measurer.style.background = 'white';
     document.body.appendChild(measurer);
     
     // 안전 마진 - 페이지 하단에 더 많은 여유 공간 확보
@@ -197,25 +201,18 @@ function distributeElementsToPages(elements: HTMLElement[]): HTMLDivElement[] {
         // 강제로 레이아웃 재계산
         void measurer.offsetHeight; // Force reflow
         
-        // 실제 렌더링된 높이 측정 (getBoundingClientRect 사용)
-        const rect = clone.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(clone);
-        const marginTop = parseFloat(computedStyle.marginTop) || 0;
-        const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
-        
-        // 더 정확한 높이 계산
-        const elementHeight = Math.ceil(rect.height + marginTop + marginBottom);
+        // 더 간단하고 안정적인 높이 계산
+        const elementHeight = Math.max(clone.offsetHeight, clone.scrollHeight, 20); // 최소 20px
         
         const elementType = element.tagName;
         const elementText = clone.textContent?.substring(0, 30) || '';
         console.log(`요소 ${index} (${elementType}): 높이 ${elementHeight}px, 현재: ${currentHeight}px/${MAX_HEIGHT}px, 내용: "${elementText}..."`);
         
-        // 큰 요소(테이블, 이미지 등)가 페이지를 크게 넘어가는 경우 처리
-        if (elementHeight > MAX_HEIGHT) {
-            console.log(`  → 요소가 페이지 크기(${MAX_HEIGHT}px)보다 큼`);
+        // 매우 큰 요소(500px 이상)만 별도 처리
+        if (elementHeight > 500) {
+            console.log(`  → 매우 큰 요소 (${elementHeight}px) 별도 처리`);
             // 현재 페이지에 내용이 있으면 저장
             if (currentHeight > 0) {
-                console.log(`  → 현재 페이지 저장 (높이: ${currentHeight}px)`);
                 pages.push(currentPage);
                 currentPage = createA4Page();
                 currentContentWrapper = currentPage.querySelector('.pdf-content-wrapper') as HTMLDivElement;
@@ -226,7 +223,6 @@ function distributeElementsToPages(elements: HTMLElement[]): HTMLDivElement[] {
             const actualElement = element.cloneNode(true) as HTMLElement;
             currentContentWrapper.appendChild(actualElement);
             pages.push(currentPage);
-            console.log(`  → 큰 요소 페이지 추가 (페이지 ${pages.length})`);
             
             // 새 페이지 시작
             currentPage = createA4Page();
