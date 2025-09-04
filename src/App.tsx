@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import MainApp from './pages/MainApp';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/privacy" element={<PrivacyPolicyWrapper />} />
         <Route path="/terms" element={<TermsOfServiceWrapper />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

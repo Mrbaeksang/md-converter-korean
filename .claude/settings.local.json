@@ -4,7 +4,12 @@
       "Bash(npm install:*)",
       "Bash(grep:*)",
       "Bash(git checkout:*)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__desktop-commander__read_file",
+      "mcp__desktop-commander__list_directory",
+      "Read(/C:\\Users\\qortk\\IdeaProjects\\md-converter-korean\\src/**)",
+      "Read(/C:\\Users\\qortk\\IdeaProjects\\md-converter-korean\\src/**)",
+      "Read(/C:\\Users\\qortk\\IdeaProjects\\md-converter-korean\\src\\pages/**)"
     ],
     "deny": [],
     "ask": []

@@ -66,9 +66,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     
-    <!-- Google AdSense -->
+    <!-- Google AdSense - Auto ads disabled, manual placement only -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8287266902600032"
-         crossorigin="anonymous"></script>
+         crossorigin="anonymous" data-ad-break-test="on" data-ad-frequency-hint="30s"></script>
+    <script>
+      // Disable auto ads to prevent ads on empty pages
+      (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
+      
+      // Only enable ads on content-rich pages
+      window.addEventListener('load', function() {
+        const path = window.location.pathname;
+        const contentPages = ['/', '/privacy', '/terms'];
+        
+        // Check if current page has content
+        if (contentPages.some(p => path === p || path.endsWith(p))) {
+          // Resume ad requests only on pages with content
+          (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 0;
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
