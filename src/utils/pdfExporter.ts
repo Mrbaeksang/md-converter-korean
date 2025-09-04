@@ -173,7 +173,6 @@ function parseHtmlToElements(html: string): HTMLElement[] {
     return elements.filter(element => {
         // 완전히 빈 요소는 제외
         const textContent = element.textContent?.trim() || '';
-        const innerHTML = element.innerHTML?.trim() || '';
         
         // 텍스트나 자식 요소가 있으면 포함
         if (textContent.length > 0 || element.children.length > 0) {
