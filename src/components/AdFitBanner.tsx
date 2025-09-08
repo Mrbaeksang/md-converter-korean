@@ -9,7 +9,9 @@ interface AdFitBannerProps {
 
 declare global {
   interface Window {
-    adfit?: any;
+    adfit?: {
+      refresh: () => void;
+    };
   }
 }
 
@@ -18,6 +20,8 @@ export default function AdFitBanner({ unit, width, height, className }: AdFitBan
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const adElement = adRef.current;
+    
     if (!scriptLoaded.current) {
       const script = document.createElement('script');
       script.type = 'text/javascript';
@@ -37,17 +41,17 @@ export default function AdFitBanner({ unit, width, height, className }: AdFitBan
     }
 
     return () => {
-      if (adRef.current) {
-        adRef.current.innerHTML = '';
+      if (adElement) {
+        adElement.innerHTML = '';
       }
     };
   }, [unit]);
 
   return (
-    <div className={className} ref={adRef}>
+    <div className={className} ref={adRef} style={{ textAlign: 'center' }}>
       <ins
         className="kakao_ad_area"
-        style={{ display: 'none', width: '100%' }}
+        style={{ display: 'none' }}
         data-ad-unit={unit}
         data-ad-width={width}
         data-ad-height={height}
