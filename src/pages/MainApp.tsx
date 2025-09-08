@@ -428,6 +428,23 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
         </div>
       </div>
       
+      {/* Mobile Ad - Under Tabs */}
+      {isMobile && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          padding: '10px 0',
+          backgroundColor: '#f9fafb',
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          <AdFitBanner 
+            unit="DAN-JWjUbfRJ2ED11QGa"
+            width={300}
+            height={250}
+          />
+        </div>
+      )}
+      
       {/* Main Container */}
       <div className="main-container">
         {/* Sidebar */}
@@ -463,6 +480,17 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
               TXT
             </button>
           </div>
+          
+          {/* PC Sidebar Ad */}
+          {!isMobile && (
+            <div className="sidebar-section" style={{ marginTop: '20px' }}>
+              <AdFitBanner 
+                unit="DAN-JWjUbfRJ2ED11QGa"
+                width={300}
+                height={250}
+              />
+            </div>
+          )}
         </div>
         
         {/* Content Area */}
@@ -521,21 +549,6 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
             onMarkdownChange={setMarkdown}
           />
         </div>
-      </div>
-      
-      {/* AdFit Banner - PC & Mobile */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        padding: '20px 0',
-        backgroundColor: '#f9fafb',
-        borderTop: '1px solid #e5e7eb'
-      }}>
-        <AdFitBanner 
-          unit="DAN-JWjUbfRJ2ED11QGa"
-          width={300}
-          height={250}
-        />
       </div>
       
       {/* Bottom Bar */}
