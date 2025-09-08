@@ -485,9 +485,9 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
           {!isMobile && (
             <div className="sidebar-section" style={{ marginTop: '20px' }}>
               <AdFitBanner 
-                unit="DAN-JWjUbfRJ2ED11QGa"
-                width={300}
-                height={250}
+                unit="DAN-rMbHNqx9PC3uaCWn"
+                width={160}
+                height={600}
               />
             </div>
           )}
