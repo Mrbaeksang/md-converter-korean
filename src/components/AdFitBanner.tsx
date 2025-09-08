@@ -7,13 +7,6 @@ interface AdFitBannerProps {
   className?: string;
 }
 
-declare global {
-  interface Window {
-    adfit?: {
-      refresh: () => void;
-    };
-  }
-}
 
 export default function AdFitBanner({ unit, width, height, className }: AdFitBannerProps) {
   const scriptLoaded = useRef(false);
@@ -30,14 +23,10 @@ export default function AdFitBanner({ unit, width, height, className }: AdFitBan
       
       script.onload = () => {
         scriptLoaded.current = true;
-        if (window.adfit) {
-          window.adfit.refresh();
-        }
+        // AdFit doesn't need manual refresh on initial load
       };
       
       document.body.appendChild(script);
-    } else if (window.adfit) {
-      window.adfit.refresh();
     }
 
     return () => {
