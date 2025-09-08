@@ -4,6 +4,7 @@ import { exportAs } from '../utils/converter';
 import type { ExportFormat } from '../utils/converter';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { PreviewPanel } from '../components/PreviewPanel/PreviewPanel';
+import AdFitBanner from '../components/AdFitBanner';
 import kakaoQR from '../assets/kakao-qr.png';
 import buymeacoffeeQR from '../assets/buymeacoffee-qr.png';
 
@@ -520,6 +521,21 @@ A: 네! 모바일에서는 상단 탭으로 편집/미리보기를 전환하며 
             onMarkdownChange={setMarkdown}
           />
         </div>
+      </div>
+      
+      {/* AdFit Banner - PC & Mobile */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        padding: '20px 0',
+        backgroundColor: '#f9fafb',
+        borderTop: '1px solid #e5e7eb'
+      }}>
+        <AdFitBanner 
+          unit="DAN-JWjUbfRJ2ED11QGa"
+          width={300}
+          height={250}
+        />
       </div>
       
       {/* Bottom Bar */}
